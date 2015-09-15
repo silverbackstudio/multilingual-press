@@ -1,11 +1,7 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Mlp_Term_Translation_Controller
- *
- * @version 2015.08.21
- * @author  Inpsyde GmbH, toscho, tf
- * @license GPL
+ * Term translation controller.
  */
 class Mlp_Term_Translation_Controller implements Mlp_Updatable {
 
@@ -40,10 +36,10 @@ class Mlp_Term_Translation_Controller implements Mlp_Updatable {
 	public function __construct( Mlp_Content_Relations_Interface $content_relations ) {
 
 		$this->content_relations = $content_relations;
-		$current_site = get_current_blog_id();
+
 		$this->nonce = new Inpsyde_Nonce_Validator(
 			'mlp_term_translation',
-			$current_site
+			get_current_blog_id()
 		);
 	}
 
@@ -103,7 +99,9 @@ class Mlp_Term_Translation_Controller implements Mlp_Updatable {
 		$view = $this->get_view();
 
 		if ( Mlp_Term_Field_View::ADD_TERM_FIELDSET_ID === $name ) {
-			return $view->print_fieldset_id();
+			echo $view->get_fieldset_id();
+
+			return TRUE;
 		}
 
 		$table_positions = array(
