@@ -1,7 +1,7 @@
-<?php
+<?php # -*- coding: utf-8 -*-
+
 /**
- * Uninstall routines. This file is called automatically when the plugin
- * is deleted per user interface.
+ * Uninstall routines. This file is called automatically when the plugin is deleted per user interface.
  *
  * See http://codex.wordpress.org/Function_Reference/register_uninstall_hook
  */
@@ -10,9 +10,9 @@
 defined( 'WP_UNINSTALL_PLUGIN' ) || die();
 
 // We don't do anything on single sites anyway.
-if ( ! is_multisite() )
+if ( ! is_multisite() ) {
 	return;
-
+}
 
 // check if the "pro"-version is available and activated
 if ( function_exists( 'mlp_pro_init' ) ) {
@@ -24,22 +24,20 @@ if ( function_exists( 'mlp_init' ) ) {
 	return;
 }
 
-
 // getting all available plugins
 $plugins = get_plugins();
-$check   = '';
 
 if ( WP_UNINSTALL_PLUGIN === 'multilingual-press/multilingual-press.php' ) {
 	// checking if the pro is available (not active) when the free is uninstalled
-	if ( array_key_exists( 'multilingual-press-pro/multilingual-press.php', $plugins ) )
+	if ( array_key_exists( 'multilingual-press-pro/multilingual-press.php', $plugins ) ) {
 		return;
-}
-else if ( WP_UNINSTALL_PLUGIN === 'multilingual-press-pro/multilingual-press.php' ) {
+	}
+} else if ( WP_UNINSTALL_PLUGIN === 'multilingual-press-pro/multilingual-press.php' ) {
 	// checking if the free is available (not active) when the pro is uninstalled
-	if ( array_key_exists( 'multilingual-press/multilingual-press.php', $plugins ) )
+	if ( array_key_exists( 'multilingual-press/multilingual-press.php', $plugins ) ) {
 		return;
+	}
 }
-
 
 // ------ Tables ------
 /**
@@ -47,9 +45,10 @@ else if ( WP_UNINSTALL_PLUGIN === 'multilingual-press-pro/multilingual-press.php
  */
 global $wpdb;
 
-foreach ( array ( 'mlp_languages', 'multilingual_linked', 'mlp_site_relations' ) as $table )
-	$wpdb->query( "DROP TABLE IF EXISTS " . $wpdb->base_prefix . $table );
-
+// TODO: Update, new table names, get table names automatically
+foreach ( array( 'mlp_languages', 'multilingual_linked', 'mlp_site_relations' ) as $table ) {
+	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}$table" );
+}
 
 // ------ Site options ------
 
@@ -59,17 +58,15 @@ delete_site_option( 'inpsyde_multilingual_quicklink_options' );
 delete_site_option( 'mlp_version' );
 delete_site_option( 'multilingual_press_check_db' );
 
-
 // ------ Blog options ------
 
 $sites = wp_get_sites();
-
-if ( empty ( $sites ) )
+if ( empty( $sites ) ) {
 	return;
+}
 
 foreach ( $sites as $site ) {
-
-	switch_to_blog( $site['blog_id'] );
+	switch_to_blog( $site[ 'blog_id' ] );
 
 	delete_option( 'inpsyde_multilingual_blog_relationship' );
 	delete_option( 'inpsyde_multilingual_redirect' );
