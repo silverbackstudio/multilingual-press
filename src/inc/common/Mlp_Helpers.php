@@ -253,7 +253,11 @@ class Mlp_Helpers {
 	 */
 	public static function run_custom_plugin(
 		/** @noinspection PhpUnusedParameterInspection */
-		$element_id, $type, $blog_id, $hook, $param
+		$element_id,
+		$type,
+		$blog_id,
+		$hook,
+		$param
 	) {
 
 		if ( empty( $element_id ) )

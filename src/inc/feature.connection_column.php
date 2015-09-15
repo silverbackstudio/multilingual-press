@@ -37,7 +37,8 @@ function mlp_feature_connection_column() {
  */
 function mlp_render_related_blog_column(
 	/** @noinspection PhpUnusedParameterInspection */
-	$column_name, $blog_id
+	$column_name,
+	$blog_id
 ) {
 
 	switch_to_blog( $blog_id );

@@ -71,7 +71,9 @@ class Mlp_Term_Connector {
 	 */
 	public function change_term_relationships(
 		/** @noinspection PhpUnusedParameterInspection */
-		$term_id, $term_taxonomy_id, $taxonomy
+		$term_id,
+		$term_taxonomy_id,
+		$taxonomy
 	) {
 
 		if ( ! $this->is_valid_request( $taxonomy ) ) {
