@@ -1,13 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Class Mlp_Db_Installer
- *
- * Install our tables.
- *
- * @version 2015.06.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * Installer for all plugin tables.
  */
 class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 
@@ -31,6 +25,7 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 		global $wpdb;
 
 		$this->db_info = $db_info;
+
 		$this->wpdb = $wpdb;
 	}
 
@@ -63,9 +58,8 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		$db_info = $this->get_schema( $schema );
+
 		$table = $db_info->get_table_name();
-		$columns = $db_info->get_schema();
-		$columns_sql = $this->array_to_sql_columns( $columns );
 
 		$add = '';
 
@@ -87,10 +81,13 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 			$add .= "\n";
 		}
 
+		$columns = $db_info->get_schema();
+		$columns_sql = $this->array_to_sql_columns( $columns );
+
 		$charset_collate = $this->get_wp_charset_collate();
 
 		// the user could have just deleted the plugin without running the clean up.
-		$sql = "CREATE TABLE $table (\n{$columns_sql}{$add})$charset_collate;";
+		$sql = "CREATE TABLE $table (\n{$columns_sql}$add)$charset_collate;";
 		dbDelta( $sql );
 
 		return (int) $this->insert_default( $db_info, $columns );
