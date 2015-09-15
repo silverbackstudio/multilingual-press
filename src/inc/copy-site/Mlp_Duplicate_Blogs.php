@@ -350,9 +350,8 @@ class Mlp_Duplicate_Blogs {
 		$replaced_rows = 0;
 
 		foreach ( $tables as $table => $columns ) {
-			$table_name = new Mlp_Db_Table_Name( $table, $this->table_names );
 			$replaced_rows += (int) $db_replace->replace_string(
-				$table_name,
+				$table,
 				$columns,
 				$copy_files->source_url,
 				$copy_files->dest_url

@@ -32,27 +32,26 @@ class Mlp_Db_Replace {
 	/**
 	 * Replace string in multiple columns in a table
 	 *
-	 * @param  Mlp_Db_Table_Name_Interface $table
+	 * @param  string $table
 	 * @param  array  $columns
 	 * @param  string $search
 	 * @param  string $replacement
 	 * @return int    Number of affected rows
 	 */
 	public function replace_string(
-		Mlp_Db_Table_Name_Interface $table,
+		                            $table,
 		Array                       $columns,
 		                            $search,
 		                            $replacement
 	) {
 
-		$name         = $table->get_name();
 		$replacements = $this->get_replacement_sql( $columns, $search, $replacement );
 
 		if ( empty ( $replacements ) )
 			return 0;
 
 		$this->wpdb->query( 'SET autocommit = 0;' );
-		$num = (int) $this->wpdb->query( "UPDATE `$name` SET $replacements" );
+		$num = (int) $this->wpdb->query( "UPDATE $table SET $replacements" );
 		$this->wpdb->query( 'COMMIT;' );
 		$this->wpdb->query( 'SET autocommit = 1;' );
 

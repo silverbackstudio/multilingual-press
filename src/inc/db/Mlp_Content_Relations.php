@@ -34,7 +34,7 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 	 *
 	 * @param wpdb                         $wpdb           Database object.
 	 * @param Mlp_Site_Relations_Interface $site_relations Site relations object.
-	 * @param Mlp_Db_Table_Name_Interface  $link_table     Link table object.
+	 * @param string                       $link_table     Link table name.
 	 */
 	public function __construct(
 		wpdb $wpdb,
@@ -44,7 +44,7 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 
 		$this->wpdb = $wpdb;
 		$this->site_relations = $site_relations;
-		$this->link_table = $link_table->get_name();
+		$this->link_table = $link_table;
 	}
 
 	/**
