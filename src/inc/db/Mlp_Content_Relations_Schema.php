@@ -1,11 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Relationships between content blocks (posts, terms, whatever).
- *
- * @version 2015.06.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * SQL table schema for the Content Relations table.
  */
 class Mlp_Content_Relations_Schema implements Mlp_Db_Schema_Interface {
 
@@ -36,8 +32,6 @@ class Mlp_Content_Relations_Schema implements Mlp_Db_Schema_Interface {
 
 	/**
 	 * Return the table schema.
-	 *
-	 * See wp_get_db_schema() in wp-admin/includes/schema.php for the default schema.
 	 *
 	 * @return array
 	 */
@@ -82,7 +76,7 @@ class Mlp_Content_Relations_Schema implements Mlp_Db_Schema_Interface {
 	 */
 	public function get_index_sql() {
 
-		// Due to dbDelta: KEY (not INDEX), and no spaces inside brackets!
+		// Due to dbDelta: KEY (not INDEX), and space before but no spaces inside brackets!
 		return "KEY (ml_blogid,ml_elementid)";
 	}
 

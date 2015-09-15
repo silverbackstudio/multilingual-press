@@ -1,11 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Interface for SQL tables
- *
- * @version 2015.06.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * Interface for SQL table schemas.
  */
 interface Mlp_Db_Schema_Interface {
 
@@ -18,8 +14,6 @@ interface Mlp_Db_Schema_Interface {
 
 	/**
 	 * Return the table schema.
-	 *
-	 * See wp_get_db_schema() in wp-admin/includes/schema.php for the default schema.
 	 *
 	 * @return array
 	 */
