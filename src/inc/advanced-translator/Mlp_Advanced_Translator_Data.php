@@ -121,7 +121,8 @@ class Mlp_Advanced_Translator_Data
 		}
 
 		$this->save_context = array(
-			'source_blog'    => get_current_blog_id(),
+			'source_site'    => get_current_blog_id(),
+			'source_blog'    => get_current_blog_id(), // Backwards compatibility
 			'source_post'    => $post,
 			'real_post_type' => $post_type,
 			'real_post_id'   => $post_id,
@@ -150,7 +151,8 @@ class Mlp_Advanced_Translator_Data
 
 			switch_to_blog( $remote_blog_id );
 
-			$this->save_context[ 'target_blog_id' ] = $remote_blog_id;
+			$this->save_context[ 'target_site_id' ] = $remote_blog_id;
+			$this->save_context[ 'target_blog_id' ] = $remote_blog_id; // Backwards compatibility
 
 			$new_post = $this->create_post_to_send( $post_data, $post_type, $remote_blog_id );
 

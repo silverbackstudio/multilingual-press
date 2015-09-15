@@ -76,7 +76,6 @@ class Mlp_Translation_Metabox {
 		$this->data = new Mlp_Translatable_Post_Data(
 			$this->request_validator,
 			$this->allowed_post_types,
-			$this->plugin_data->get( 'link_table' ),
 			$this->plugin_data->get( 'content_relations' )
 		);
 

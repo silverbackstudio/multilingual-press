@@ -70,7 +70,8 @@ class Mlp_Relationship_Changer {
 			return 'source not found';
 
 		$save_context = array(
-			'source_blog'    => $this->source_blog_id,
+			'source_site'    => $this->source_blog_id,
+			'source_blog'    => $this->source_blog_id, // Backwards compatibility
 			'source_post'    => $source_post,
 			'real_post_type' => $this->get_real_post_type( $source_post ),
 			'real_post_id'   => $this->get_real_post_id( $this->source_post_id ),
@@ -92,7 +93,8 @@ class Mlp_Relationship_Changer {
 
 		restore_current_blog();
 
-		$save_context[ 'target_blog_id' ] = $this->remote_blog_id;
+		$save_context[ 'target_site_id' ] = $this->remote_blog_id;
+		$save_context[ 'target_blog_id' ] = $this->remote_blog_id; // Backwards compatibility
 
 		/** This action is documented in inc/advanced-translator/Mlp_Advanced_Translator_Data.php */
 		do_action( 'mlp_after_post_synchronization', $save_context );
