@@ -1,22 +1,18 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Class Mlp_Relationship_Control_Data
- *
- * @author  Inpsyde GmbH, toscho
- * @version 2014.03.14
- * @license GPL
+ * Post relations data provider.
  */
 class Mlp_Relationship_Control_Data {
 
 	/**
-	 * @var array
+	 * @var int[]
 	 */
-	private $ids = array (
+	private $ids = array(
+		'source_site_id' => 0,
 		'source_post_id' => 0,
-		'source_blog_id' => 0,
-		'remote_blog_id' => 0,
-		'remote_post_id' => 0
+		'remote_site_id' => 0,
+		'remote_post_id' => 0,
 	);
 
 	/**
@@ -27,29 +23,33 @@ class Mlp_Relationship_Control_Data {
 	/**
 	 * @param array $ids
 	 */
-	public function __construct( Array $ids = array () ) {
+	public function __construct( array $ids = array() ) {
 
-		if ( ! empty ( $ids ) ) {
+		if ( ! empty( $ids ) ) {
 			$this->ids = $ids;
+
 			return;
 		}
 
-		foreach ( $this->ids as $id => $value ) {
-			if ( isset ( $_REQUEST[ $id ] ) )
-				$this->ids[ $id ] = (int) $_REQUEST[ $id ];
+		foreach ( $this->ids as $key => $value ) {
+			if ( isset( $_REQUEST[ $key ] ) ) {
+				$this->ids[ $key ] = (int) $_REQUEST[ $key ];
+			}
 		}
 
-		if ( isset ( $_REQUEST['s'] ) )
-			$this->search = $_REQUEST['s'];
+		if ( isset( $_REQUEST[ 's' ] ) ) {
+			$this->search = $_REQUEST[ 's' ];
+		}
 	}
 
 	/**
 	 * Set values lately.
 	 *
-	 * @param  array $ids
-	 * @return array
+	 * @param int[] $ids
+	 *
+	 * @return int[]
 	 */
-	public function set_ids( Array $ids ) {
+	public function set_ids( array $ids ) {
 
 		$this->ids = $ids;
 
@@ -57,11 +57,79 @@ class Mlp_Relationship_Control_Data {
 	}
 
 	/**
-	 * @return null|WP_Post
+	 * @return int
+	 */
+	public function get_remote_post_id() {
+
+		return $this->ids[ 'remote_post_id' ];
+	}
+
+	/**
+	 * @return int
+	 */
+	public function get_remote_site_id() {
+
+		return $this->ids[ 'remote_site_id' ];
+	}
+
+	/**
+	 * @return int
+	 */
+	public function get_source_post_id() {
+
+		return $this->ids[ 'source_post_id' ];
+	}
+
+	/**
+	 * @return array
+	 */
+	public function get_search_results() {
+
+		if (
+			$this->ids[ 'remote_site_id' ] === 0
+			|| $this->ids[ 'source_site_id' ] === 0
+		) {
+			return array();
+		}
+
+		$source_post = $this->get_source_post();
+		if ( ! $source_post ) {
+			return array();
+		}
+
+		$args = array(
+			'numberposts' => 10,
+			'post_type'   => $source_post->post_type,
+			'post_status' => array( 'draft', 'publish', 'private' ),
+		);
+
+		if ( ! empty( $this->ids[ 'remote_post_id' ] ) ) {
+			$args[ 'exclude' ] = $this->ids[ 'remote_post_id' ];
+		}
+
+		if ( ! empty( $this->search ) ) {
+			$args[ 's' ] = $this->search;
+		}
+
+		switch_to_blog( $this->ids[ 'remote_site_id' ] );
+
+		$posts = get_posts( $args );
+
+		restore_current_blog();
+
+		if ( empty( $posts ) ) {
+			return array();
+		}
+
+		return $posts;
+	}
+
+	/**
+	 * @return WP_Post|NULL
 	 */
 	public function get_source_post() {
 
-		switch_to_blog( $this->ids[ 'source_blog_id' ] );
+		switch_to_blog( $this->ids[ 'source_site_id' ] );
 
 		$post = get_post( $this->ids[ 'source_post_id' ] );
 
@@ -70,53 +138,4 @@ class Mlp_Relationship_Control_Data {
 		return $post;
 	}
 
-	/**
-	 * @return int
-	 */
-	public function get_remote_blog_id() {
-
-		return $this->ids[ 'remote_blog_id' ];
-	}
-
-	public function get_remote_post_id() {
-
-		return $this->ids[ 'remote_post_id' ];
-	}
-
-	/**
-	 * @return array
-	 */
-	public function get_search_results() {
-
-		if ( 0 === $this->ids[ 'remote_blog_id' ]
-			or 0 === $this->ids[ 'source_blog_id' ]
-		)
-			return array ();
-
-		$source_post = $this->get_source_post();
-
-		if ( ! $source_post )
-			return array ();
-
-		$args = array (
-			'numberposts' => 10,
-			'post_type'   => $source_post->post_type,
-			'post_status' => array ( 'draft', 'publish', 'private' )
-		);
-
-		if ( ! empty ( $this->ids[ 'remote_post_id' ] ) )
-			$args[ 'exclude' ] = $this->ids[ 'remote_post_id' ];
-
-		if ( ! empty ( $this->search ) )
-			$args[ 's' ] = $this->search;
-
-		switch_to_blog( $this->ids[ 'remote_blog_id' ] );
-		$posts = get_posts( $args );
-		restore_current_blog();
-
-		if ( empty ( $posts ) )
-			return array ();
-
-		return $posts;
-	}
 }
