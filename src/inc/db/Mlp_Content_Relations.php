@@ -1,11 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Relationships between content blocks (posts, terms, whatever).
- *
- * @version 2015.08.21
- * @author  Inpsyde GmbH, toscho, tf
- * @license GPL
+ * Relationships between content elements.
  */
 class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 
@@ -17,12 +13,12 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 	/**
 	 * @var string
 	 */
-	private $link_table;
+	private $relationships_table;
 
 	/**
-	 * @var Mlp_Site_Relations_Interface
+	 * @var string
 	 */
-	private $site_relations;
+	private $table;
 
 	/**
 	 * @var wpdb
@@ -32,111 +28,113 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 	/**
 	 * Constructor. Set up the properties.
 	 *
-	 * @param wpdb                         $wpdb           Database object.
-	 * @param Mlp_Site_Relations_Interface $site_relations Site relations object.
-	 * @param string                       $link_table     Link table name.
+	 * @param wpdb                    $wpdb                Database object.
+	 * @param Mlp_Db_Schema_Interface $table               Contente Relations schema object.
+	 * @param Mlp_Db_Schema_Interface $relationships_table Relationships schema object.
 	 */
 	public function __construct(
 		wpdb $wpdb,
-		Mlp_Site_Relations_Interface $site_relations,
-		$link_table
+		Mlp_Db_Schema_Interface $table,
+		Mlp_Db_Schema_Interface $relationships_table
 	) {
 
 		$this->wpdb = $wpdb;
-		$this->site_relations = $site_relations;
-		$this->link_table = $link_table;
+
+		$this->table = $table->get_table_name();
+
+		$this->relationships_table = $relationships_table->get_table_name();
 	}
 
 	/**
 	 * Set a relation according to the given parameters.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
+	 * @param int $site_id         Site ID.
+	 * @param int $content_id      Content ID.
 	 *
 	 * @return bool
 	 */
-	public function set_relation(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type = 'post'
-	) {
+	public function set_relation( $relationship_id, $site_id, $content_id ) {
 
-		$translation_ids = $this->get_translation_ids(
-			$source_site_id,
-			$target_site_id,
-			$source_content_id,
-			$target_content_id,
-			$type
-		);
-
-		$existing = $this->get_relations( $source_site_id, $source_content_id, $type );
-
-		if ( isset( $existing[ $target_site_id ] ) ) {
-			if ( $existing[ $target_site_id ] === $target_content_id ) {
-				return TRUE;
-			}
-
-			$this->delete_relation(
-				$translation_ids[ 'ml_source_blogid' ],
-				$target_site_id,
-				$translation_ids[ 'ml_source_elementid' ],
-				0, // old content id
-				$type
-			);
+		if ( $content_id === 0 ) {
+			return (bool) $this->delete_relation_for_site( $relationship_id, $site_id );
 		}
 
-		$result = (bool) $this->insert_row(
-			$translation_ids[ 'ml_source_blogid' ],
-			$target_site_id,
-			$translation_ids[ 'ml_source_elementid' ],
-			$target_content_id,
-			$type
-		);
+		$current_content_id = $this->get_content_id( $relationship_id, $site_id );
+		if ( $current_content_id && $current_content_id !== $content_id ) {
+			// Delete different relation of the given site
+			$this->delete_relation_for_site( $relationship_id, $site_id, FALSE );
+		}
 
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
-		wp_cache_delete( $cache_key, $this->cache_group );
+		$type = $this->get_relationship_type( $relationship_id );
+		if ( $type ) {
+			$current_relationship_id = $this->get_relationship_id_single( $site_id, $content_id, $type );
+			if ( $current_relationship_id && $current_relationship_id !== $relationship_id ) {
+				// Delete different relation of the given content element
+				$this->delete_relation_for_site( $current_relationship_id, $site_id, FALSE );
+			}
+		}
 
-		do_action(
-			'mlp_debug',
-			current_filter()
-			. '/' . __METHOD__ . '/' . __LINE__
-			. " - {$this->wpdb->last_query}"
-		);
+		$result = (bool) $this->insert_relation( $relationship_id, $site_id, $content_id );
 
 		return $result;
 	}
 
 	/**
-	 * Return the cache key for the given arguments.
+	 * Delete the relation for the given arguments.
 	 *
-	 * @param int    $source_site_id    Blog ID.
-	 * @param int    $source_content_id Content ID.
-	 * @param string $type              Content type.
+	 * @param int  $relationship_id Relationship ID.
+	 * @param int  $site_id         Site ID.
+	 * @param bool $delete          Optional. Delete relationship if less than three content elements. Defaults to TRUE.
 	 *
-	 * @return string
+	 * @return int
 	 */
-	private function get_cache_key( $source_site_id, $source_content_id, $type ) {
+	private function delete_relation_for_site( $relationship_id, $site_id, $delete = TRUE ) {
 
-		return "mlp_{$type}_relations_{$source_site_id}_{$source_content_id}";
+		$content_ids = $this->get_content_ids( $relationship_id );
+		if (
+			count( $content_ids ) < 3
+			&& $delete
+			&& ! empty( $content_ids[ $site_id ] )
+		) {
+			return $this->delete_relationship( $relationship_id );
+		}
+
+		$type = $this->get_relationship_type( $relationship_id );
+
+		$where = compact(
+			'relationship_id',
+			'site_id'
+		);
+
+		$deleted_rows = (int) $this->wpdb->delete( $this->table, $where, '%d' );
+
+		if ( isset( $content_ids[ $site_id ] ) ) {
+			if ( $type ) {
+				wp_cache_delete(
+					$this->get_relationship_id_cache_key( $site_id, $content_ids[ $site_id ], $type ),
+					$this->cache_group
+				);
+			}
+
+			unset( $content_ids[ $site_id ] );
+
+			wp_cache_set( $this->get_content_ids_cache_key( $relationship_id ), $content_ids, $this->cache_group );
+		}
+
+		return $deleted_rows;
 	}
 
 	/**
-	 * Return an array with site IDs as keys and content IDs as values.
+	 * Return the content IDs for the given relationship ID.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
 	 *
-	 * @return array
+	 * @return int[]
 	 */
-	public function get_relations( $source_site_id, $source_content_id, $type = 'post' ) {
+	private function get_content_ids( $relationship_id ) {
 
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
+		$cache_key = $this->get_content_ids_cache_key( $relationship_id );
 
 		$cache = wp_cache_get( $cache_key, $this->cache_group );
 		if ( is_array( $cache ) ) {
@@ -144,326 +142,370 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 		}
 
 		$sql = "
-SELECT t.ml_blogid as site_id, t.ml_elementid as content_id
-FROM {$this->link_table} s
-INNER JOIN {$this->link_table} t
-ON s.ml_source_blogid = t.ml_source_blogid
-	AND s.ml_source_elementid = t.ml_source_elementid
-	AND s.ml_type = t.ml_type
-WHERE s.ml_blogid = %d
-	AND s.ml_elementid = %d
-	AND s.ml_type = %s";
+SELECT site_id, content_id
+FROM {$this->table}
+WHERE relationship_id = %d";
+		$query = $this->wpdb->prepare( $sql, $relationship_id );
 
-		$query = $this->wpdb->prepare( $sql, $source_site_id, $source_content_id, $type );
-
-		$results = $this->wpdb->get_results( $query, ARRAY_A );
-		if ( ! $results ) {
+		$rows = $this->wpdb->get_results( $query, ARRAY_A );
+		if ( ! $rows ) {
 			return array();
 		}
 
-		$output = array();
+		$content_ids = array();
 
-		foreach ( $results as $set ) {
-			$output[ (int) $set[ 'site_id' ] ] = (int) $set[ 'content_id' ];
+		foreach ( $rows as $row ) {
+			$content_ids[ (int) $row[ 'site_id' ] ] = (int) $row[ 'content_id' ];
 		}
 
-		wp_cache_set( $cache_key, $output, $this->cache_group );
+		wp_cache_set( $cache_key, $content_ids, $this->cache_group );
 
-		return $output;
+		return $content_ids;
 	}
 
 	/**
-	 * Delete a relation according to the given parameters.
+	 * Return the content IDs cache key for the given relationship ID.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
 	 *
-	 * @return int Number of deleted rows
+	 * @return string
 	 */
-	public function delete_relation(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id = 0,
-		$type = 'post'
-	) {
+	private function get_content_ids_cache_key( $relationship_id ) {
 
-		$where = array(
-			'ml_source_blogid'    => $source_site_id,
-			'ml_source_elementid' => $source_content_id,
-			'ml_type'             => $type,
-		);
-		$where_format = array(
-			'%d',
-			'%d',
-			'%s',
-		);
-
-		if ( 0 < $target_site_id ) {
-			$where[ 'ml_blogid' ] = $target_site_id;
-			$where_format[] = '%d';
-		}
-
-		if ( 0 < $target_content_id ) {
-			$where[ 'ml_elementid' ] = $target_content_id;
-			$where_format[] = '%d';
-		}
-
-		$result = (int) $this->wpdb->delete( $this->link_table, $where, $where_format );
-
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
-		wp_cache_delete( $cache_key, $this->cache_group );
-
-		do_action(
-			'mlp_debug',
-			current_filter()
-			. '/' . __METHOD__ . '/' . __LINE__
-			. " - {$this->wpdb->last_query}"
-		);
-
-		return $result;
+		return "mlp_content_ids_{$relationship_id}";
 	}
 
 	/**
-	 * Return the existing (or new) translation IDs according to the given parameters.
+	 * Remove the relationship as well as all relations with the given relationship ID.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return array
-	 */
-	public function get_translation_ids(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type
-	) {
-
-		$result = $this->get_existing_translation_ids(
-			$source_site_id,
-			$target_site_id,
-			$source_content_id,
-			$target_content_id,
-			$type
-		);
-
-		if ( ! $result ) {
-			return $this->get_new_translation_ids( $source_site_id, $source_content_id, $type );
-		}
-
-		if ( 1 < count( $result ) ) {
-			// We have more than one id.
-			$this->clean_up_duplicated_translation_ids( $result, $type );
-		}
-
-		return $result[ 0 ];
-	}
-
-	/**
-	 * Insert a row into the link table.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
 	 *
 	 * @return int
 	 */
-	private function insert_row(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type
-	) {
+	private function delete_relationship( $relationship_id ) {
 
-		$result = (int) $this->wpdb->insert(
-			$this->link_table,
-			array(
-				'ml_source_blogid'    => $source_site_id,
-				'ml_source_elementid' => $source_content_id,
-				'ml_blogid'           => $target_site_id,
-				'ml_elementid'        => $target_content_id,
-				'ml_type'             => $type,
-			)
-		);
+		$content_ids = $this->get_content_ids( $relationship_id );
 
-		do_action(
-			'mlp_debug',
-			current_filter()
-			. '/' . __METHOD__ . '/' . __LINE__
-			. " - {$this->wpdb->last_query}"
-		);
+		$deleted_rows = (int) $this->wpdb->delete( $this->table, compact( 'relationship_id' ), '%d' );
 
-		return $result;
+		wp_cache_delete( $this->get_content_ids_cache_key( $relationship_id ), $this->cache_group );
+
+		$type = $this->get_relationship_type( $relationship_id );
+
+		foreach ( $content_ids as $site_id => $content_id ) {
+			wp_cache_delete( $this->get_relationship_id_cache_key( $site_id, $content_id, $type ), $this->cache_group );
+		}
+
+		$this->wpdb->delete( $this->relationships_table, array( 'id' => $relationship_id ), '%d' );
+
+		wp_cache_delete( $this->get_relationship_type_cache_key( $relationship_id ), $this->cache_group );
+
+		return $deleted_rows;
 	}
 
 	/**
-	 * Return new translation IDs for the given parameters.
+	 * Return the content type for the relationship with the given ID.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
 	 *
-	 * @return array
+	 * @return string
 	 */
-	private function get_new_translation_ids( $source_site_id, $source_content_id, $type ) {
+	private function get_relationship_type( $relationship_id ) {
 
-		$this->insert_row(
-			$source_site_id,
-			$source_site_id,
-			$source_content_id,
-			$source_content_id,
-			$type
-		);
+		$cache_key = $this->get_relationship_type_cache_key( $relationship_id );
 
-		do_action(
-			'mlp_debug',
-			current_filter()
-			. '/' . __METHOD__ . '/' . __LINE__
-			. " - {$this->wpdb->last_query}"
-		);
-
-		return array(
-			'ml_source_blogid'    => $source_site_id,
-			'ml_source_elementid' => $source_content_id,
-		);
-	}
-
-	/**
-	 * Delete duplicate database entries.
-	 *
-	 * @param array  $relations Content relations
-	 * @param string $type      Content type.
-	 *
-	 * @return int
-	 */
-	private function clean_up_duplicated_translation_ids( array $relations, $type ) {
-
-		$result = (int) $this->wpdb->update(
-			$this->link_table,
-			array(
-				'ml_source_blogid'    => $relations[ 0 ][ 'ml_source_blogid' ],
-				'ml_source_elementid' => $relations[ 0 ][ 'ml_source_elementid' ],
-			),
-			array(
-				'ml_source_blogid'    => $relations[ 1 ][ 'ml_source_blogid' ],
-				'ml_source_elementid' => $relations[ 1 ][ 'ml_source_elementid' ],
-				'ml_type'             => $type,
-			),
-			array(
-				'%d',
-				'%d',
-			),
-			array(
-				'%d',
-				'%d',
-				'%s',
-			)
-		);
-
-		do_action(
-			'mlp_debug',
-			current_filter()
-			. '/' . __METHOD__ . '/' . __LINE__
-			. " - {$this->wpdb->last_query}"
-		);
-
-		return $result;
-	}
-
-	/**
-	 * Return the existing translation IDs according to the given parameters.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return array
-	 */
-	public function get_existing_translation_ids(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type
-	) {
+		$cache = wp_cache_get( $cache_key, $this->cache_group );
+		if ( ! empty( $cache ) ) {
+			return $cache;
+		}
 
 		$sql = "
-SELECT DISTINCT ml_source_blogid, ml_source_elementid
-FROM {$this->link_table}
-WHERE (
-		( ml_blogid = %d AND ml_elementid = %d )
-		OR ( ml_blogid = %d AND ml_elementid = %d )
-	)
-	AND ml_type = %s";
-
-		$query = $this->wpdb->prepare(
-			$sql,
-			$source_site_id,
-			$source_content_id,
-			$target_site_id,
-			$target_content_id,
-			$type
-		);
-
-		$result = $this->wpdb->get_results( $query, ARRAY_A );
-		if ( ! $result ) {
-			return array();
-		}
-
-		foreach ( $result as $key => $data ) {
-			$result[ $key ] = array_map( 'intval', $data );
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Return the term taxonomy ID of the given target site for the given source term.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return int
-	 */
-	public function get_element_for_site( $source_site_id, $target_site_id, $source_content_id, $type ) {
-
-		$sql = "
-SELECT t.ml_elementid
-FROM {$this->link_table} s
-INNER JOIN {$this->link_table} t
-ON s.ml_source_blogid = t.ml_source_blogid
-	AND s.ml_source_elementid = t.ml_source_elementid
-	AND s.ml_type = t.ml_type
-WHERE s.ml_id != t.ml_id
-	AND s.ml_blogid = %d
-	AND s.ml_elementid = %d
-	AND s.ml_type = %s
-	AND t.ml_blogid = %d
+SELECT type
+FROM {$this->relationships_table}
+WHERE id = %d
 LIMIT 1";
+		$sql = $this->wpdb->prepare( $sql, $relationship_id );
 
-		$query = $this->wpdb->prepare(
-			$sql,
-			$source_site_id,
-			$source_content_id,
-			$type,
-			$target_site_id
+		$type = (string) $this->wpdb->get_var( $sql );
+		if ( ! $type ) {
+			return '';
+		}
+
+		wp_cache_set( $cache_key, $type, $this->cache_group );
+
+		return $type;
+	}
+
+	/**
+	 * Return the relationship type for the given relationship ID.
+	 *
+	 * @param int $relationship_id Relationship ID.
+	 *
+	 * @return string
+	 */
+	private function get_relationship_type_cache_key( $relationship_id ) {
+
+		return "mlp_relationship_type_{$relationship_id}";
+	}
+
+	/**
+	 * Return the relationship id cache key for the given arguments.
+	 *
+	 * @param int    $site_id    Site ID.
+	 * @param int    $content_id Content ID.
+	 * @param string $type       Content type.
+	 *
+	 * @return string
+	 */
+	private function get_relationship_id_cache_key( $site_id, $content_id, $type ) {
+
+		return "mlp_{$type}_relationship_id_{$site_id}_{$content_id}";
+	}
+
+	/**
+	 * Return the content ID for the given arguments.
+	 *
+	 * @param int $relationship_id Relationship ID.
+	 * @param int $site_id         Site ID.
+	 *
+	 * @return int
+	 */
+	public function get_content_id( $relationship_id, $site_id ) {
+
+		$content_ids = $this->get_content_ids( $relationship_id );
+		if ( empty( $content_ids[ $site_id ] ) ) {
+			return 0;
+		}
+
+		return $content_ids[ $site_id ];
+	}
+
+	/**
+	 * Return the relationship ID for the given arguments.
+	 *
+	 * @param int    $site_id    Site ID.
+	 * @param int    $content_id Content ID.
+	 * @param string $type       Content type.
+	 *
+	 * @return int
+	 */
+	private function get_relationship_id_single( $site_id, $content_id, $type = 'post' ) {
+
+		$cache_key = $this->get_relationship_id_cache_key( $site_id, $content_id, $type );
+
+		$cache = wp_cache_get( $cache_key, $this->cache_group );
+		if ( is_int( $cache ) && $cache > 0 ) {
+			return $cache;
+		}
+
+		$sql = "
+SELECT r.id
+FROM {$this->relationships_table} r
+INNER JOIN {$this->table} t ON r.id = t.relationship_id
+WHERE t.site_id = %d
+	AND t.content_id = %d
+	AND r.type = %s
+LIMIT 1";
+		$query = $this->wpdb->prepare( $sql, $site_id, $content_id, $type );
+
+		$relationship_id = (int) $this->wpdb->get_var( $query );
+		if ( ! $relationship_id ) {
+			return 0;
+		}
+
+		wp_cache_set( $cache_key, $relationship_id, $this->cache_group );
+
+		return $relationship_id;
+	}
+
+	/**
+	 * Insert a new relation with the given values.
+	 *
+	 * @param int $relationship_id Relationship ID.
+	 * @param int $site_id         Site ID.
+	 * @param int $content_id      Content ID.
+	 *
+	 * @return int
+	 */
+	private function insert_relation( $relationship_id, $site_id, $content_id ) {
+
+		$data = compact(
+			'relationship_id',
+			'site_id',
+			'content_id'
 		);
 
-		return (int) $this->wpdb->get_var( $query );
+		$inserted_rows = (int) $this->wpdb->insert( $this->table, $data, '%d' );
+		if ( $inserted_rows ) {
+			$content_ids = $this->get_content_ids( $relationship_id );
+			$content_ids[ $site_id ] = $content_id;
+
+			wp_cache_set(
+				$this->get_content_ids_cache_key( $relationship_id ),
+				$content_ids,
+				$this->cache_group
+			);
+
+			$type = $this->get_relationship_type( $relationship_id );
+			if ( $type ) {
+				wp_cache_set(
+					$this->get_relationship_id_cache_key( $site_id, $content_id, $type ),
+					$relationship_id,
+					$this->cache_group
+				);
+
+			}
+		}
+
+		return $inserted_rows;
+	}
+
+	/**
+	 * Delete the relation for the given arguments.
+	 *
+	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as value.
+	 * @param string $type        Content type.
+	 *
+	 * @return int
+	 */
+	public function delete_relation( array $content_ids, $type ) {
+
+		$relationship_id = $this->get_relationship_id( $content_ids, $type );
+		if ( ! $relationship_id ) {
+			return 0;
+		}
+
+		$deleted_rows = 0;
+
+		foreach ( array_keys( $content_ids ) as $site_id ) {
+			$deleted_rows += $this->delete_relation_for_site( $relationship_id, $site_id );
+		}
+
+		return $deleted_rows;
+	}
+
+	/**
+	 * Return the relationship ID for the given arguments.
+	 *
+	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as values.
+	 * @param string $type        Content type.
+	 * @param bool   $create      Optional. Create a new relationship if not exists? Defaults to FALSE.
+	 *
+	 * @return int
+	 */
+	public function get_relationship_id( array $content_ids, $type, $create = FALSE ) {
+
+		switch ( count( $content_ids ) ) {
+			case 0:
+				// Error: No contents given!
+				return 0;
+
+			case 1:
+				$site_id = key( $content_ids );
+				$content_id = current( $content_ids );
+
+				$relationship_id = $this->get_relationship_id_single( $site_id, $content_id, $type );
+				break;
+
+			default:
+				$relationship_id = $this->get_relationship_id_multiple( $content_ids, $type );
+		}
+
+		if ( ! $relationship_id && $create ) {
+			return $this->insert_relationship( $type );
+		}
+
+		return $relationship_id;
+	}
+
+	/**
+	 * Return the relationship ID for the given arguments.
+	 *
+	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as value.
+	 * @param string $type        Content type.
+	 *
+	 * @return int
+	 */
+	private function get_relationship_id_multiple( array $content_ids, $type ) {
+
+		$relationship_id = 0;
+
+		foreach ( $content_ids as $site_id => $content_id ) {
+			$new_relationship_id = $this->get_relationship_id_single( $site_id, $content_id, $type );
+			if ( ! $new_relationship_id ) {
+				continue;
+			}
+
+			if ( $relationship_id === 0 ) {
+				$relationship_id = $new_relationship_id;
+			} elseif ( $relationship_id !== $new_relationship_id ) {
+				// Error: Different relationship IDs!
+				return 0;
+			}
+		}
+
+		return $relationship_id;
+	}
+
+	/**
+	 * Insert a new relationship entry for the given type, and return the relationship ID.
+	 *
+	 * @param string $type Content type.
+	 *
+	 * @return int
+	 */
+	private function insert_relationship( $type ) {
+
+		if ( ! $this->wpdb->insert( $this->relationships_table, compact( 'type' ), '%s' ) ) {
+			return 0;
+		}
+
+		$relationship_id = (int) $this->wpdb->insert_id;
+
+		wp_cache_set( $this->get_relationship_type_cache_key( $relationship_id ), $type, $this->cache_group );
+
+		return $relationship_id;
+	}
+
+	/**
+	 * Return the content ID in the given target site for the given source content element.
+	 *
+	 * @param int    $site_id        Source site ID.
+	 * @param int    $content_id     Source post ID or term taxonomy ID.
+	 * @param string $type           Content type.
+	 * @param int    $target_site_id Target site ID.
+	 *
+	 * @return int
+	 */
+	public function get_content_id_for_site(
+		$site_id,
+		$content_id,
+		$type,
+		$target_site_id
+	) {
+
+		$relations = $this->get_relations( $site_id, $content_id, $type );
+
+		return empty( $relations[ $target_site_id ] ) ? 0 : $relations[ $target_site_id ];
+	}
+
+	/**
+	 * Return an array with site IDs as keys and content IDs as values.
+	 *
+	 * @param int    $site_id    Source site ID.
+	 * @param int    $content_id Source post ID or term taxonomy ID.
+	 * @param string $type       Content type.
+	 *
+	 * @return array
+	 */
+	public function get_relations( $site_id, $content_id, $type ) {
+
+		$relationship_id = $this->get_relationship_id_single( $site_id, $content_id, $type );
+		if ( ! $relationship_id ) {
+			return array();
+		}
+
+		return $this->get_content_ids( $relationship_id );
 	}
 
 }
