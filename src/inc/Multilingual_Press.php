@@ -1,22 +1,14 @@
 <?php # -*- coding: utf-8 -*-
+
 /**
- * Class Multilingual_Press
- *
- * Kind of a front controller.
- *
- * @version 2014.07.16
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * MultilingualPress front controller.
  */
 class Multilingual_Press {
 
 	/**
-	 * The linked elements table
-	 *
-	 * @since  0.1
-	 * @var    string
+	 * @var string
 	 */
-	private $link_table = '';
+	private $content_relations_table = '';
 
 	/**
 	 * Local path to plugin file.
@@ -92,7 +84,7 @@ class Multilingual_Press {
 		do_action( 'inpsyde_mlp_init', $this->plugin_data, $this->wpdb );
 
 		// Cleanup upon blog delete
-		add_filter( 'delete_blog', array ( $this, 'delete_blog' ), 10, 2 );
+		add_filter( 'delete_blog', array ( $this, 'delete_site' ), 10, 2 );
 
 		// Check for errors
 		add_filter( 'all_admin_notices', array ( $this, 'check_for_user_errors_admin_notice' ) );
@@ -254,36 +246,35 @@ class Multilingual_Press {
 	}
 
 	/**
-	 * Remove deleted blog from 'inpsyde_multilingual' site option and clean up linked elements table.
+	 * Remove deleted site from 'inpsyde_multilingual' site option and clean up Content Relations table.
 	 *
 	 * @wp-hook delete_blog
 	 *
-	 * @param int $blog_id ID of the deleted blog.
+	 * @param int $site_id ID of the deleted site.
 	 *
 	 * @return void
 	 */
-	public function delete_blog( $blog_id ) {
+	public function delete_site( $site_id ) {
 
 		global $wpdb;
 
 		// Delete relations
 		$site_relations = $this->plugin_data->get( 'site_relations' );
-		$site_relations->delete_relation( $blog_id );
+		$site_relations->delete_relation( $site_id );
 
 		// Update site option
-		$blogs = (array) get_site_option( 'inpsyde_multilingual', array() );
-		if ( isset( $blogs[ $blog_id ] ) ) {
-			unset( $blogs[ $blog_id ] );
-			update_site_option( 'inpsyde_multilingual', $blogs );
+		$sites = (array) get_site_option( 'inpsyde_multilingual', array() );
+		if ( isset( $sites[ $site_id ] ) ) {
+			unset( $sites[ $site_id ] );
+			update_site_option( 'inpsyde_multilingual', $sites );
 		}
 
-		// Clean up linked elements table
+		// Clean up Content Relations table
 		$sql = "
-			DELETE
-			FROM {$this->link_table}
-			WHERE ml_source_blogid = %d
-				OR ml_blogid = %d";
-		$sql = $wpdb->prepare( $sql, $blog_id, $blog_id );
+DELETE
+FROM {$this->content_relations_table}
+WHERE site_id = %d";
+		$sql = $wpdb->prepare( $sql, $site_id );
 		$wpdb->query( $sql );
 	}
 
@@ -415,22 +406,17 @@ class Multilingual_Press {
 	private function prepare_plugin_data() {
 
 		$site_relations = $this->plugin_data->get( 'site_relations' );
+
 		$table_list = new Mlp_Db_Table_List( $this->wpdb );
 
-		$this->link_table = $this->wpdb->base_prefix . 'multilingual_linked';
 		$this->plugin_file_path = $this->plugin_data->get( 'plugin_file_path' );
+
 		$this->plugin_data->set( 'module_manager', new Mlp_Module_Manager( 'state_modules' ) );
+
 		$this->plugin_data->set( 'site_manager', new Mlp_Module_Manager( 'inpsyde_multilingual' ) );
+
 		$this->plugin_data->set( 'table_list', $table_list );
-		$this->plugin_data->set( 'link_table', $this->link_table );
-		$this->plugin_data->set(
-			'content_relations',
-			new Mlp_Content_Relations(
-				$this->wpdb,
-				$site_relations,
-				$this->link_table
-			)
-		);
+
 		$this->plugin_data->set(
 			'language_api',
 			new Mlp_Language_Api(
@@ -441,6 +427,7 @@ class Multilingual_Press {
 				$this->wpdb
 			)
 		);
+
 		$this->plugin_data->set( 'assets', new Mlp_Assets( $this->plugin_data->get( 'locations' ) ) );
 	}
 
@@ -449,10 +436,14 @@ class Multilingual_Press {
 	 */
 	private function prepare_helpers() {
 
-		Mlp_Helpers::$link_table = $this->link_table;
-		Mlp_Helpers::insert_dependency( 'site_relations', $this->plugin_data->get( 'site_relations' ) );
+		Mlp_Helpers::$content_relations_table = $this->plugin_data->get( 'content_relations_table' );
+		Mlp_Helpers::$link_table = $this->plugin_data->get( 'content_relations_table' ); // Backwards compatibility
+
 		Mlp_Helpers::insert_dependency( 'language_api', $this->plugin_data->get( 'language_api' ) );
+
 		Mlp_Helpers::insert_dependency( 'plugin_data', $this->plugin_data );
+
+		Mlp_Helpers::insert_dependency( 'site_relations', $this->plugin_data->get( 'site_relations' ) );
 	}
 
 }
