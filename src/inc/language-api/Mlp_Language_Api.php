@@ -61,7 +61,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 
 		$this->language_db = new Mlp_Language_Db_Access( $table_name );
 
-		$this->table_name = $this->wpdb->base_prefix . $table_name;
+		$this->table_name = $wpdb->base_prefix . $table_name;
 
 		$this->site_relations = $site_relations;
 
