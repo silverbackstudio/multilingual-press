@@ -1,21 +1,21 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Various global helper methods
+ * Various global helper methods.
  *
  * Please use the functions in /inc/functions.php, do not access the methods of this class directly.
- *
- * @version 2015.06.26
- * @author  Inpsyde GmbH
- * @license GPL
  */
 class Mlp_Helpers {
 
 	/**
-	 * @see Mlp_Helpers::insert_dependency()
-	 * @type array
+	 * @var string
 	 */
-	private static $dependencies = array ();
+	public static $content_relations_table = '';
+
+	/**
+	 * @var array
+	 */
+	private static $dependencies = array();
 
 	/**
 	 * @var string
@@ -63,56 +63,51 @@ class Mlp_Helpers {
 	}
 
 	/**
-	 * Load the languages set for each blog
+	 * Load the languages set for each site.
 	 *
-	 * @since   0.1
-	 * @static
-	 * @access  public
-	 * @uses    get_site_option, get_blog_option, get_current_blog_id, format_code_lang
-	 * @param   $not_related | filter out non-related blogs? By default
-	 * @return  array $options
+	 * @param bool $not_related Filter out non-related sites?
+	 *
+	 * @return array
 	 */
 	public static function get_available_languages( $not_related = FALSE ) {
 
-		$related_blogs = array ();
-
-		// Get all registered blogs
+		// Get all registered sites
 		$languages = get_site_option( 'inpsyde_multilingual' );
-
-		if ( empty ( $languages ) )
-			return array ();
+		if ( empty( $languages ) ) {
+			return array();
+		}
 
 		/** @var Mlp_Site_Relations $site_relations */
 		$site_relations = self::$dependencies[ 'site_relations' ];
 
-		// Do we need related blogs only?
-		if ( FALSE === $not_related ) {
-			$related_blogs = $site_relations->get_related_sites(
-				get_current_blog_id(),
-				! is_user_logged_in()
-			);
+		$related_sites = array();
 
-			// No related blogs? Leave here.
-			if ( empty ( $related_blogs ) )
-				return array ();
+		// Do we need related sites only?
+		if ( FALSE === $not_related ) {
+			$current_site_id = get_current_blog_id();
+			$related_sites = $site_relations->get_related_sites( $current_site_id );
+
+			// No related sites? Leave here.
+			if ( empty( $related_sites ) ) {
+				return array();
+			}
 		}
 
-		$options = array ();
+		$options = array();
 
-		// Loop through blogs
-		foreach ( $languages as $language_blogid => $language_data ) {
-
-			// no blogs with a link to other blogs
-			if ( empty ( $language_data[ 'lang' ] ) || '-1' === $language_data[ 'lang' ] )
+		// Loop through sites
+		foreach ( $languages as $language_site_id => $language_data ) {
+			// no sites with a link to other sites
+			if ( empty( $language_data[ 'lang' ] ) || '-1' === $language_data[ 'lang' ] ) {
 				continue;
+			}
 
-			// Filter out blogs that are not related
-			if ( ! $not_related && ! in_array( $language_blogid, $related_blogs ) )
+			// Filter out sites that are not related
+			if ( ! $not_related && ! in_array( $language_site_id, $related_sites ) ) {
 				continue;
+			}
 
-			$lang = $language_data[ 'lang' ];
-
-			$options[ $language_blogid ] = $lang;
+			$options[ $language_site_id ] = $language_data[ 'lang' ];
 		}
 
 		return $options;
@@ -154,31 +149,33 @@ class Mlp_Helpers {
 	}
 
 	/**
-	 * Get the element ID in other blogs for the selected element
+	 * Get the content ID in other sites for the given content element.
 	 *
-	 * @param   int    $element_id ID of the selected element
-	 * @param   string $type       | type of the selected element
-	 * @param   int    $blog_id    ID of the selected blog
-	 * @return  array $elements
+	 * @param int    $content_id Optional. Content ID in the given/current site. Defaults to queried object's ID.
+	 * @param string $type       Optional. Content type. DeFaults to 'post'.
+	 * @param int    $site_id    Optional. Site ID. Defaults to current site ID.
+	 *
+	 * @return array
 	 */
-	public static function load_linked_elements( $element_id = 0, $type = '', $blog_id = 0 ) {
+	public static function load_linked_elements( $content_id = 0, $type = '', $site_id = 0 ) {
 
-		$element_id = self::get_default_content_id( $element_id );
-
-		if ( ! $element_id )
+		$content_id = self::get_default_content_id( $content_id );
+		if ( ! $content_id ) {
 			return array();
+		}
 
-		// If no ID is provided, get current blogs' ID
-		if ( 0 === $blog_id )
-			$blog_id = get_current_blog_id();
+		if ( 0 === $site_id ) {
+			$site_id = get_current_blog_id();
+		}
 
-		if ( '' === $type )
+		if ( '' === $type ) {
 			$type = 'post';
+		}
 
 		/** @var Mlp_Language_Api $api */
 		$api = self::$dependencies[ 'language_api' ];
 
-		return $api->get_related_content_ids( $blog_id, $element_id, $type );
+		return $api->get_related_content_ids( $site_id, $content_id, $type );
 	}
 
 	/**
@@ -253,11 +250,7 @@ class Mlp_Helpers {
 	 */
 	public static function run_custom_plugin(
 		/** @noinspection PhpUnusedParameterInspection */
-		$element_id,
-		$type,
-		$blog_id,
-		$hook,
-		$param
+		$element_id, $type, $blog_id, $hook, $param
 	) {
 
 		if ( empty( $element_id ) )
@@ -348,7 +341,7 @@ class Mlp_Helpers {
 	}
 
 	/**
-	 * Get the linked elements and display them as a list.
+	 * Return the linked elements and display them as a list.
 	 *
 	 * @param array $args
 	 *
@@ -451,7 +444,7 @@ class Mlp_Helpers {
 		foreach ( $items as $site_id => $item ) {
 			$text = $item[ 'name' ];
 
-			if ( ! empty ( $item[ 'icon' ] ) ) {
+			if ( ! empty( $item[ 'icon' ] ) ) {
 				$img = '<img src="' . $item[ 'icon' ] . '" alt="' . esc_attr( $item[ 'name' ] ) . '" />';
 
 				if ( $params[ 'display_flag' ] ) {
@@ -459,16 +452,18 @@ class Mlp_Helpers {
 				}
 			}
 
-			if ( $site_id === get_current_blog_id() ) {
-				$output .= '<li><a class="current-language-item" href="">' . $text . '</a></li>';
-			} else {
-				$output .= sprintf(
-					'<li><a rel="alternate" hreflang="%1$s"  href="%2$s">%3$s</a></li>',
+			$output .= '<li>';
+
+			$output .= ( $site_id === get_current_blog_id() )
+				? '<a class="current-language-item" href="">' . $text . '</a>'
+				: sprintf(
+					'<a rel="alternate" hreflang="%1$s" href="%2$s">%3$s</a>',
 					$item[ 'http' ],
 					$item[ 'url' ],
 					$text
 				);
-			}
+
+			$output .= '</li>';
 		}
 
 		$output .= '</ul></div>';
@@ -504,13 +499,17 @@ class Mlp_Helpers {
 	}
 
 	/**
-	 * @param  int $content_id
+	 * Return the ID of the given/current object.
+	 *
+	 * @param int $content_id Optional. Content ID. Defaults to 0.
+	 *
 	 * @return int
 	 */
 	private static function get_default_content_id( $content_id = 0 ) {
 
-		if ( 0 < (int) $content_id )
+		if ( 0 < (int) $content_id ) {
 			return $content_id;
+		}
 
 		return get_queried_object_id();
 	}
