@@ -5,7 +5,7 @@
  * Description: Create a fast translation network on WordPress multisite. Run each language in a separate site, and connect the content in a lightweight user interface. Use a customizable widget to link to all sites.
  * Author:      Inpsyde GmbH
  * Author URI:  http://inpsyde.com
- * Version:     2.2.3
+ * Version:     2.3.0-alpha
  * Text Domain: multilingualpress
  * Domain Path: /languages
  * License:     GPLv3
@@ -111,24 +111,42 @@ function mlp_pre_run_test( $pagenow, Inpsyde_Property_List_Interface $data, $wp_
 		return FALSE;
 	}
 
-	$data->set( 'site_relations', new Mlp_Site_Relations( $wpdb, 'mlp_site_relations' ) );
+	$site_relations_schema = new Mlp_Site_Relations_Schema( $wpdb );
+	$data->set( 'site_relations_schema', $site_relations_schema );
+	$data->set( 'site_relations', new Mlp_Site_Relations( $wpdb, $site_relations_schema ) );
+
+	$relationships_schema = new Mlp_Relationships_Schema( $wpdb );
+	$data->set( 'relationships_schema', $relationships_schema );
+
+	$content_relations_schema = new Mlp_Content_Relations_Schema( $wpdb );
+	$data->set( 'content_relations_schema', $content_relations_schema );
+	$data->set(
+		'content_relations',
+		new Mlp_Content_Relations(
+			$wpdb,
+			$content_relations_schema,
+			$relationships_schema
+		)
+	);
+	$data->set( 'content_relations_table', $content_relations_schema->get_table_name() );
+	$data->set( 'link_table', $content_relations_schema->get_table_name() ); // Backwards compatibility
 
 	if ( Mlp_Self_Check::INSTALLATION_CONTEXT_OK === $requirements_check ) {
-
-		$deactivator = new Mlp_Network_Plugin_Deactivation();
-
-		$last_version_option = get_site_option( 'mlp_version' );
-		$last_version = new Mlp_Semantic_Version_Number( $last_version_option );
 		$current_version = new Mlp_Semantic_Version_Number( $data->get( 'version' ) );
-		$upgrade_check = $self_check->is_current_version( $current_version, $last_version );
+
+		$last_version = new Mlp_Semantic_Version_Number( get_site_option( 'mlp_version' ) );
+
 		$updater = new Mlp_Update_Plugin_Data( $data, $wpdb, $current_version, $last_version );
 
-		if ( Mlp_Self_Check::NEEDS_INSTALLATION === $upgrade_check ) {
-			$updater->install_plugin();
-		}
+		switch ( $self_check->is_current_version( $current_version, $last_version ) ) {
+			case Mlp_Self_Check::NEEDS_INSTALLATION:
+				$updater->install_plugin();
+				break;
 
-		if ( Mlp_Self_Check::NEEDS_UPGRADE === $upgrade_check ) {
-			$updater->update( $deactivator );
+			case Mlp_Self_Check::NEEDS_UPGRADE:
+				$deactivator = new Mlp_Network_Plugin_Deactivation();
+				$updater->update( $deactivator );
+				break;
 		}
 	}
 
