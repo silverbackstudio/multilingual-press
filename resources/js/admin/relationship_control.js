@@ -49,9 +49,9 @@
 	$.fn.mlp_search = function( options ) {
 
 		var settings = $.extend( {
-				remote_blog_id  : this.data( 'remote_blog_id' ),
+				remote_site_id  : this.data( 'remote_site_id' ),
 				remote_post_id  : this.data( 'remote_post_id' ),
-				source_blog_id  : this.data( 'source_blog_id' ),
+				source_site_id  : this.data( 'source_site_id' ),
 				source_post_id  : this.data( 'source_post_id' ),
 				search_field    : 'input.mlp_search_field',
 				result_container: 'ul.mlp_search_results',
@@ -82,9 +82,9 @@
 					{
 						action        : settings.action,
 						source_post_id: settings.source_post_id,
-						source_blog_id: settings.source_blog_id,
+						source_site_id: settings.source_site_id,
 						remote_post_id: settings.remote_post_id,
-						remote_blog_id: settings.remote_blog_id,
+						remote_site_id: settings.remote_site_id,
 						s             : keywords
 					}
 				);
@@ -120,10 +120,10 @@
 
 		var $this = $( this ),
 			source_post_id = $this.data( 'source_post_id' ),
-			source_blog_id = $this.data( 'source_blog_id' ),
+			source_site_id = $this.data( 'source_site_id' ),
 			remote_post_id = $this.data( 'remote_post_id' ),
-			remote_blog_id = $this.data( 'remote_blog_id' ),
-			current_value = $( 'input[name="mlp_rsc_action[' + remote_blog_id + ']"]:checked' ).val(),
+			remote_site_id = $this.data( 'remote_site_id' ),
+			current_value = $( 'input[name="mlp_rsc_action[' + remote_site_id + ']"]:checked' ).val(),
 			new_post_id = 0,
 			new_post_title = '',
 
@@ -137,7 +137,7 @@
 			},
 
 			connectExisting = function() {
-				new_post_id = $( 'input[name="mlp_add_post[' + remote_blog_id + ']"]:checked' ).val();
+				new_post_id = $( 'input[name="mlp_add_post[' + remote_site_id + ']"]:checked' ).val();
 
 				if ( !new_post_id || '0' === new_post_id ) {
 					alert( mlpL10n.noPostSelected );
@@ -154,9 +154,9 @@
 					data   : {
 						action        : 'mlp_rsc_' + action,
 						source_post_id: source_post_id,
-						source_blog_id: source_blog_id,
+						source_site_id: source_site_id,
 						remote_post_id: remote_post_id,
-						remote_blog_id: remote_blog_id,
+						remote_site_id: remote_site_id,
 						new_post_id   : new_post_id,
 						new_post_title: new_post_title
 					},

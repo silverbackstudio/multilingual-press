@@ -23,17 +23,17 @@
 					term_translator.isPropagating = true;
 
 					var $this = $( this ),
-						relation = $this.find( '[value="' + $this.val() + '"]' ).data( 'relation' ) || '';
+						relationship = $this.find( '[value="' + $this.val() + '"]' ).data( 'relationship' ) || '0';
 
 					$selects.not( $this ).each( function() {
 						var $this = $( this ),
-							$option = $this.find( 'option[data-relation="' + relation + '"]' ),
-							currentRelation = $this.find( '[value="' + $this.val() + '"]' ).data( 'relation' ) || '';
+							$option = $this.find( 'option[data-relationship="' + relationship + '"]' ),
+							currentRelationship = $this.find( '[value="' + $this.val() + '"]' ).data( 'relationship' ) || '0';
 
-						if ( relation !== '' ) {
+						if ( relationship !== '0' ) {
 							if ( $option.length ) {
 								$this.val( $option.val() );
-							} else if ( currentRelation !== '' ) {
+							} else if ( currentRelationship !== '0' ) {
 								$this.val( $this.find( 'option' ).first().val() );
 							}
 						}
