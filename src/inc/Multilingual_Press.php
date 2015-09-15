@@ -270,6 +270,7 @@ class Multilingual_Press {
 		}
 
 		// Clean up Content Relations table
+		// TODO: Do this via the Content Relations class in order to account for proper clean-up (i.e., no left-overs)
 		$sql = "
 DELETE
 FROM {$this->content_relations_table}
