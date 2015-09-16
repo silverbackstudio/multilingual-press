@@ -141,11 +141,11 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 			return $cache;
 		}
 
-		$sql = "
+		$query = "
 SELECT site_id, content_id
 FROM {$this->table}
 WHERE relationship_id = %d";
-		$query = $this->wpdb->prepare( $sql, $relationship_id );
+		$query = $this->wpdb->prepare( $query, $relationship_id );
 
 		$rows = $this->wpdb->get_results( $query, ARRAY_A );
 		if ( ! $rows ) {
@@ -219,14 +219,14 @@ WHERE relationship_id = %d";
 			return $cache;
 		}
 
-		$sql = "
+		$query = "
 SELECT type
 FROM {$this->relationships_table}
 WHERE id = %d
 LIMIT 1";
-		$sql = $this->wpdb->prepare( $sql, $relationship_id );
+		$query = $this->wpdb->prepare( $query, $relationship_id );
 
-		$type = (string) $this->wpdb->get_var( $sql );
+		$type = (string) $this->wpdb->get_var( $query );
 		if ( ! $type ) {
 			return '';
 		}
@@ -298,7 +298,7 @@ LIMIT 1";
 			return $cache;
 		}
 
-		$sql = "
+		$query = "
 SELECT r.id
 FROM {$this->relationships_table} r
 INNER JOIN {$this->table} t ON r.id = t.relationship_id
@@ -306,7 +306,7 @@ WHERE t.site_id = %d
 	AND t.content_id = %d
 	AND r.type = %s
 LIMIT 1";
-		$query = $this->wpdb->prepare( $sql, $site_id, $content_id, $type );
+		$query = $this->wpdb->prepare( $query, $site_id, $content_id, $type );
 
 		$relationship_id = (int) $this->wpdb->get_var( $query );
 		if ( ! $relationship_id ) {
@@ -393,12 +393,12 @@ LIMIT 1";
 			return $cache;
 		}
 
-		$sql = "
+		$query = "
 SELECT DISTINCT relationhip_id
 FROM {$this->table}
-WHERE site_id = %d;";
-		$sql = $this->wpdb->prepare( $sql, $site_id );
-		$relationship_ids = $this->wpdb->get_results( $sql, ARRAY_N );
+WHERE site_id = %d";
+		$query = $this->wpdb->prepare( $query, $site_id );
+		$relationship_ids = $this->wpdb->get_results( $query, ARRAY_N );
 		if ( empty( $relationship_ids ) ) {
 			return array();
 		}
