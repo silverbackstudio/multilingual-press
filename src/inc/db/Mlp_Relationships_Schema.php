@@ -38,8 +38,8 @@ class Mlp_Relationships_Schema implements Mlp_Db_Schema_Interface {
 	public function get_schema() {
 
 		return array(
-			'id'   => 'BIGINT(20) NOT NULL AUTO_INCREMENT',
-			'type' => 'VARCHAR(20) NOT NULL',
+			'id'   => 'bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT',
+			'type' => 'varchar(20) NOT NULL',
 		);
 	}
 
