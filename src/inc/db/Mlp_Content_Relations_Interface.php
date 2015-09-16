@@ -27,6 +27,15 @@ interface Mlp_Content_Relations_Interface {
 	public function get_content_id( $relationship_id, $site_id );
 
 	/**
+	 * Delete all relations for the given site ID.
+	 *
+	 * @param int $site_id Site ID.
+	 *
+	 * @return int
+	 */
+	public function delete_all_relations_for_site( $site_id );
+
+	/**
 	 * Delete the relation for the given arguments.
 	 *
 	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as value.

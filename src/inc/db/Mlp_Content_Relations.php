@@ -361,6 +361,66 @@ LIMIT 1";
 	}
 
 	/**
+	 * Delete all relations for the given site ID.
+	 *
+	 * @param int $site_id Site ID.
+	 *
+	 * @return int
+	 */
+	public function delete_all_relations_for_site( $site_id ) {
+
+		$deleted_rows = 0;
+
+		foreach ( $this->get_relationship_ids_for_site( $site_id ) as $relationship_id ) {
+			$deleted_rows += $this->delete_relation_for_site( $relationship_id, $site_id );
+		};
+
+		return $deleted_rows;
+	}
+
+	/**
+	 * Return the relationship IDs for the given site ID.
+	 *
+	 * @param int $site_id Site ID.
+	 *
+	 * @return int[]
+	 */
+	private function get_relationship_ids_for_site( $site_id ) {
+
+		$cache_key = $this->get_relationship_ids_cache_key( $site_id );
+		$cache = wp_cache_get( $cache_key, $this->cache_group );
+		if ( is_array( $cache ) ) {
+			return $cache;
+		}
+
+		$sql = "
+SELECT DISTINCT relationhip_id
+FROM {$this->table}
+WHERE site_id = %d;";
+		$sql = $this->wpdb->prepare( $sql, $site_id );
+		$relationship_ids = $this->wpdb->get_results( $sql, ARRAY_N );
+		if ( empty( $relationship_ids ) ) {
+			return array();
+		}
+
+		wp_cache_set( $cache_key, $relationship_ids, $this->cache_group );
+
+		return $relationship_ids;
+	}
+
+	/**
+	 * Return the relationship IDs cache key for the given site ID.
+	 *
+	 * @param int $site_id Site ID.
+	 *
+	 * @return string
+	 */
+	private function get_relationship_ids_cache_key( $site_id ) {
+
+		return "mlp_relationship_ids_$site_id";
+	}
+
+	/**
 	 * Delete the relation for the given arguments.
 	 *
 	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as value.
