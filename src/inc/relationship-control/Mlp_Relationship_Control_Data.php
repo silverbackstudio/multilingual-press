@@ -113,6 +113,15 @@ class Mlp_Relationship_Control_Data {
 
 		switch_to_blog( $this->ids[ 'remote_site_id' ] );
 
+		/**
+		 * Filter the get_posts arguments used by the Relationship Control AJAX Search.
+		 *
+		 * @param array $args AJAX search arguments.
+		 *
+		 * @return array
+		 */
+		$args = apply_filters( 'mlp_relationship_control_ajax_search_arguments', $args );
+
 		$posts = get_posts( $args );
 
 		restore_current_blog();
