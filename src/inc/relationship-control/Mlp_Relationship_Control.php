@@ -6,6 +6,11 @@
 class Mlp_Relationship_Control implements Mlp_Updatable {
 
 	/**
+	 * @var Mlp_Relationship_Control_Data
+	 */
+	private $data = NULL;
+
+	/**
 	 * @var Inpsyde_Property_List_Interface
 	 */
 	private $plugin_data;
@@ -18,9 +23,9 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 	private $prefix = 'mlp_rsc';
 
 	/**
-	 * @var Mlp_Relationship_Control_Data
+	 * @var Mlp_Relationship_Changer
 	 */
-	private $data;
+	private $relationship_changer = NULL;
 
 	/**
 	 * @param Inpsyde_Property_List_Interface $plugin_data
@@ -30,9 +35,37 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 		$this->plugin_data = $plugin_data;
 	}
 
+	/**
+	 * Callback for AJAX reconnect.
+	 *
+	 * @return void
+	 */
+	public function ajax_reconnect_callback() {
+
+		if ( is_null( $this->relationship_changer ) ) {
+			$this->initialize();
+		}
+
+		$start = strlen( $this->prefix ) + 1;
+
+		$method = substr( $_REQUEST[ 'action' ], $start );
+
+		if ( ! method_exists( $this->relationship_changer, $method ) ) {
+			$this->relationship_changer->$method();
+		}
+
+		status_header( 200 );
+
+		die();
+	}
+
 	public function initialize() {
 
 		$this->data = new Mlp_Relationship_Control_Data();
+
+		$this->relationship_changer = new Mlp_Relationship_Changer( $this->plugin_data );
+
+		add_action( 'deleted_post', array( $this->relationship_changer, 'delete_relation' ) );
 
 		if ( $this->is_ajax() ) {
 			$this->set_up_ajax();
@@ -77,32 +110,6 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 	}
 
 	/**
-	 * Callback for AJAX reconnect.
-	 *
-	 * @return void
-	 */
-	public function ajax_reconnect_callback() {
-
-		$start = strlen( $this->prefix ) + 1;
-
-		$func = substr( $_REQUEST[ 'action' ], $start );
-
-		$reconnect = new Mlp_Relationship_Changer( $this->plugin_data );
-		$result = $reconnect->$func();
-
-		status_header( 200 );
-
-		// Never visible for the user, for debugging only.
-		if ( is_scalar( $result ) ) {
-			echo $result;
-		} else {
-			echo '<pre>' . print_r( $result, TRUE ) . '</pre>';
-		}
-
-		die;
-	}
-
-	/**
 	 * Create the UI above the Advanced Translator metabox.
 	 *
 	 * @wp-hook mlp_translation_meta_box_bottom
@@ -120,6 +127,10 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 		if ( 'post-new.php' === $pagenow ) {
 			// Maybe later, for now, we work on existing posts only
 			return;
+		}
+
+		if ( is_null( $this->data ) ) {
+			$this->initialize();
 		}
 
 		$this->data->set_ids(
@@ -152,6 +163,10 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 	 * @return void
 	 */
 	public function ajax_search_callback() {
+
+		if ( is_null( $this->data ) ) {
+			$this->initialize();
+		}
 
 		$view = new Mlp_Relationship_Control_Ajax_Search( $this->data, $this->plugin_data->get( 'content_relations' ) );
 		$view->render();

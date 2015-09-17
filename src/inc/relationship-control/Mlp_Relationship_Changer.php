@@ -201,8 +201,27 @@ class Mlp_Relationship_Changer {
 	 */
 	public function disconnect() {
 
+		return $this->delete_relation( $this->remote_post_id, $this->remote_site_id );
+	}
+
+	/**
+	 * Delete the post relation for the given arguments.
+	 *
+	 * @wp-hook deleted_post
+	 *
+	 * @param int $post_id Post ID.
+	 * @param int $site_id Optional. Site ID. Defaults to 0.
+	 *
+	 * @return int
+	 */
+	public function delete_relation( $post_id, $site_id = 0 ) {
+
+		if ( ! $site_id ) {
+			$site_id = get_current_blog_id();
+		}
+
 		return $this->content_relations->delete_relation(
-			array( $this->remote_site_id => $this->remote_post_id ),
+			array( $site_id => $post_id ),
 			$this->content_type
 		);
 	}
