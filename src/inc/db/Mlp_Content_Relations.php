@@ -222,8 +222,7 @@ WHERE relationship_id = %d";
 		$query = "
 SELECT type
 FROM {$this->relationships_table}
-WHERE id = %d
-LIMIT 1";
+WHERE id = %d";
 		$query = $this->wpdb->prepare( $query, $relationship_id );
 
 		$type = (string) $this->wpdb->get_var( $query );
@@ -304,8 +303,7 @@ FROM {$this->relationships_table} r
 INNER JOIN {$this->table} t ON r.id = t.relationship_id
 WHERE t.site_id = %d
 	AND t.content_id = %d
-	AND r.type = %s
-LIMIT 1";
+	AND r.type = %s";
 		$query = $this->wpdb->prepare( $query, $site_id, $content_id, $type );
 
 		$relationship_id = (int) $this->wpdb->get_var( $query );
@@ -394,7 +392,7 @@ LIMIT 1";
 		}
 
 		$query = "
-SELECT DISTINCT relationhip_id
+SELECT relationship_id
 FROM {$this->table}
 WHERE site_id = %d";
 		$query = $this->wpdb->prepare( $query, $site_id );
