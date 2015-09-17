@@ -102,6 +102,10 @@ class Mlp_Update_Plugin_Data {
 		// TODO: Define correct version
 		if ( version_compare( $last_version, '2.3.0', '<' ) ) {
 
+			// TODO: Delete all entries in the multilingual_linked (!) table for posts/terms that don't exist anymore
+
+			// TODO: Trigger data migration from multilingual_linked to both content_relations and relationships
+
 			$installer = new Mlp_Db_Installer( $this->plugin_data->get( 'site_relations_schema' ) );
 
 			if ( version_compare( $last_version, '2.0.4', '<' ) ) {
