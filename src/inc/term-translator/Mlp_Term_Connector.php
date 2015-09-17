@@ -28,7 +28,7 @@ class Mlp_Term_Connector {
 	/**
 	 * @var int[]
 	 */
-	private $post_data;
+	private $post_data = array();
 
 	/**
 	 * @var string[]
@@ -41,13 +41,11 @@ class Mlp_Term_Connector {
 	 * @param Mlp_Content_Relations_Interface   $content_relations Content relations object.
 	 * @param Inpsyde_Nonce_Validator_Interface $nonce             Nonce validator object.
 	 * @param string[]                          $taxonomies        Taxonomy names.
-	 * @param string[]                          $post_data         Post data.
 	 */
 	public function __construct(
 		Mlp_Content_Relations_Interface $content_relations,
 		Inpsyde_Nonce_Validator_Interface $nonce,
-		array $taxonomies,
-		array $post_data
+		array $taxonomies
 	) {
 
 		$this->content_relations = $content_relations;
@@ -56,9 +54,17 @@ class Mlp_Term_Connector {
 
 		$this->taxonomies = $taxonomies;
 
-		$this->post_data = array_map( 'intval', $post_data );
-
 		$this->current_site_id = get_current_blog_id();
+	}
+
+	/**
+	 * Set the post data array.
+	 *
+	 * @param string[] $post_data Post data.
+	 */
+	public function set_post_data( array $post_data ) {
+
+		$this->post_data = array_map( 'intval', $post_data );
 	}
 
 	/**
@@ -135,6 +141,10 @@ class Mlp_Term_Connector {
 	 */
 	public function edit_term( $term_taxonomy_id ) {
 
+		if ( ! $this->post_data ) {
+			return FALSE;
+		}
+
 		if ( ! array_diff( $this->post_data, array( 0 ) ) ) {
 			// All remote terms have been unselected, so delete the currently edited term rather than the remote ones
 			return $this->delete_term( $term_taxonomy_id );
@@ -166,6 +176,10 @@ class Mlp_Term_Connector {
 	 * @return bool
 	 */
 	public function create_term( $term_taxonomy_id ) {
+
+		if ( ! $this->post_data ) {
+			return FALSE;
+		}
 
 		return $this->set_relations( $this->post_data + array( $this->current_site_id => $term_taxonomy_id ) );
 	}
