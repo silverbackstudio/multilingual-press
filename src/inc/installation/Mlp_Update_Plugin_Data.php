@@ -181,7 +181,7 @@ WHERE wp_locale = %s
 	}
 
 	/**
-	 * Deletes all entries in the old multilingual_linked table for posts/terms that don't exist anmore.
+	 * Deletes all entries in the old multilingual_linked table for posts/terms that don't exist anymore.
 	 *
 	 * @return void
 	 */
