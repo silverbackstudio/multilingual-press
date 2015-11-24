@@ -258,6 +258,8 @@ WHERE id = %d";
 	 */
 	private function get_relationship_id_cache_key( $site_id, $content_id, $type ) {
 
+		// TODO: Improve caching (use multi-dimensional array to track all data)
+
 		return "mlp_{$type}_relationship_id_{$site_id}_{$content_id}";
 	}
 
