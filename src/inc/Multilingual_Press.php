@@ -310,6 +310,9 @@ class Multilingual_Press {
 		 * @param wpdb                            $wpdb        Database object.
 		 */
 		do_action( 'mlp_and_wp_loaded', $this->plugin_data, $this->wpdb );
+
+		$activator = new Mlp_Activator();
+		$activator->activate( $this->plugin_data, $this->wpdb );
 	}
 
 	/**

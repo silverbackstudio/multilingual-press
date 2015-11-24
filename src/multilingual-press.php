@@ -45,7 +45,7 @@ function mlp_init() {
 
 	$data = new Mlp_Plugin_Properties();
 
-	$data->set( 'loader',$loader->get_loader() );
+	$data->set( 'loader', $loader->get_loader() );
 
 	$locations = new Mlp_Internal_Locations();
 	$locations->add_dir( $plugin_path, $plugin_url, 'plugin' );
@@ -62,7 +62,7 @@ function mlp_init() {
 			$type
 		);
 	}
-	$data->set( 'locations',$locations );
+	$data->set( 'locations', $locations );
 
 	$data->set( 'plugin_file_path', __FILE__ );
 	$data->set( 'plugin_base_name', plugin_basename( __FILE__ ) );
@@ -73,7 +73,7 @@ function mlp_init() {
 			'text_domain_path' => 'Domain Path',
 			'plugin_uri'       => 'Plugin URI',
 			'plugin_name'      => 'Plugin Name',
-			'version'          => 'Version'
+			'version'          => 'Version',
 		)
 	);
 	foreach ( $headers as $name => $value ) {
@@ -151,6 +151,26 @@ function mlp_pre_run_test( $pagenow, Inpsyde_Property_List_Interface $data, $wp_
 	}
 
 	return TRUE;
+}
+
+register_activation_hook(
+	defined( 'MLP_PLUGIN_FILE' ) ? MLP_PLUGIN_FILE : __FILE__,
+	'mlp_activation'
+);
+
+/**
+ * Gets called on plugin activation.
+ *
+ * @return void
+ */
+function mlp_activation() {
+
+	if ( ! class_exists( 'Mlp_Activator' ) ) {
+		require plugin_dir_path( __FILE__ ) . 'inc/activation/Mlp_Activator.php';
+	}
+
+	$activator = new Mlp_Activator();
+	$activator->set_transient();
 }
 
 /**
