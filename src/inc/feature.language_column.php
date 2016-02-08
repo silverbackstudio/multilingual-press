@@ -1,12 +1,6 @@
 <?php # -*- coding: utf-8 -*-
-/**
- * Add each site language to network site table
- *
- * @since   2015-06-11
- * @version 2015-06-11
- */
 
-if ( is_admin() && ! empty( $GLOBALS[ 'pagenow' ] ) && 'sites.php' === $GLOBALS[ 'pagenow' ] ) {
+if ( is_admin() && ! empty( $GLOBALS['pagenow'] ) && 'sites.php' === $GLOBALS['pagenow'] ) {
 	add_action( 'inpsyde_mlp_loaded', 'mlp_feature_language_column' );
 }
 
@@ -39,7 +33,8 @@ function mlp_feature_language_column() {
  */
 function mlp_render_site_language_column(
 	/** @noinspection PhpUnusedParameterInspection */
-	$column_name, $blog_id
+	$column_name,
+	$blog_id
 ) {
 
 	switch_to_blog( $blog_id );

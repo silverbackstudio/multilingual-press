@@ -1,13 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Class Mlp_Db_Installer
- *
- * Install our tables.
- *
- * @version 2015.06.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * Installer for all plugin tables.
  */
 class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 
@@ -31,23 +25,8 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 		global $wpdb;
 
 		$this->db_info = $db_info;
+
 		$this->wpdb = $wpdb;
-	}
-
-	/**
-	 * Delete the table.
-	 *
-	 * @param Mlp_Db_Schema_Interface $schema Table information.
-	 *
-	 * @return int|bool Number of rows affected/selected or FALSE on error.
-	 */
-	public function uninstall( Mlp_Db_Schema_Interface $schema = NULL ) {
-
-		$schema = $this->get_schema( $schema );
-
-		$table = $schema->get_table_name();
-
-		return $this->wpdb->query( "DROP TABLE IF EXISTS $table" );
 	}
 
 	/**
@@ -57,15 +36,14 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 	 *
 	 * @return int Number of table operations run during installation.
 	 */
-	public function install( Mlp_Db_Schema_Interface $schema = NULL ) {
+	public function install( Mlp_Db_Schema_Interface $schema = null ) {
 
 		// make dbDelta() available
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		$db_info = $this->get_schema( $schema );
+
 		$table = $db_info->get_table_name();
-		$columns = $db_info->get_schema();
-		$columns_sql = $this->array_to_sql_columns( $columns );
 
 		$add = '';
 
@@ -87,47 +65,52 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 			$add .= "\n";
 		}
 
+		$columns = $db_info->get_schema();
+
+		$columns_sql = $this->array_to_sql_columns( $columns );
+
 		$charset_collate = $this->get_wp_charset_collate();
 
 		// the user could have just deleted the plugin without running the clean up.
-		$sql = "CREATE TABLE $table (\n{$columns_sql}{$add})$charset_collate;";
+		$sql = "CREATE TABLE $table (\n{$columns_sql}$add)$charset_collate;";
+
 		dbDelta( $sql );
 
 		return (int) $this->insert_default( $db_info, $columns );
 	}
 
 	/**
-	 * Insert default content into the given table.
+	 * Delete the table.
 	 *
-	 * @param Mlp_Db_Schema_Interface $db_info Table information.
-	 * @param array                   $columns Table columns.
+	 * @param Mlp_Db_Schema_Interface $schema Table information.
 	 *
-	 * @return int|bool
+	 * @return int|bool Number of rows affected/selected or FALSE on error.
 	 */
-	private function insert_default( Mlp_Db_Schema_Interface $db_info, array $columns ) {
+	public function uninstall( Mlp_Db_Schema_Interface $schema = null ) {
 
-		$table = $db_info->get_table_name();
+		$schema = $this->get_schema( $schema );
 
-		// Bail if the table is not empty
-		$temp = $this->wpdb->query( "SELECT 1 FROM $table LIMIT 1" );
-		if ( $temp ) {
-			return 0;
+		$table = $schema->get_table_name();
+
+		return $this->wpdb->query( "DROP TABLE IF EXISTS $table" );
+	}
+
+	/**
+	 * Helper function for install() and uninstall().
+	 *
+	 * Basically a check for NULL values.
+	 *
+	 * @param Mlp_Db_Schema_Interface $schema Table information.
+	 *
+	 * @return Mlp_Db_Schema_Interface
+	 */
+	private function get_schema( Mlp_Db_Schema_Interface $schema = null ) {
+
+		if ( null === $schema ) {
+			return $this->db_info;
 		}
 
-		$content = $db_info->get_default_content();
-		if ( empty( $content ) ) {
-			return 0;
-		}
-
-		$to_remove = $db_info->get_autofilled_keys();
-		foreach ( $to_remove as $remove_key ) {
-			unset ( $columns[ $remove_key ] );
-		}
-
-		$keys = join( ",", array_keys( $columns ) );
-		$sql = "INSERT INTO $table ($keys) VALUES $content;";
-
-		return $this->wpdb->query( $sql );
+		return $schema;
 	}
 
 	/**
@@ -160,7 +143,7 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 		// we need multibyte encoding for native names
 		if (
 			! empty( $this->wpdb->charset )
-			&& FALSE !== stripos( $this->wpdb->charset, 'utf' )
+			&& false !== stripos( $this->wpdb->charset, 'utf' )
 		) {
 			$charset_collate .= $this->wpdb->charset;
 		} else {
@@ -175,21 +158,37 @@ class Mlp_Db_Installer implements Mlp_Db_Installer_Interface {
 	}
 
 	/**
-	 * Helper function for install() and uninstall().
+	 * Insert default content into the given table.
 	 *
-	 * Basically a check for NULL values.
+	 * @param Mlp_Db_Schema_Interface $db_info Table information.
+	 * @param array                   $columns Table columns.
 	 *
-	 * @param Mlp_Db_Schema_Interface $schema Table information.
-	 *
-	 * @return Mlp_Db_Schema_Interface
+	 * @return int|bool
 	 */
-	private function get_schema( Mlp_Db_Schema_Interface $schema = NULL ) {
+	private function insert_default( Mlp_Db_Schema_Interface $db_info, array $columns ) {
 
-		if ( NULL === $schema ) {
-			return $this->db_info;
+		$table = $db_info->get_table_name();
+
+		// Bail if the table is not empty
+		$temp = $this->wpdb->query( "SELECT 1 FROM $table LIMIT 1" );
+		if ( $temp ) {
+			return 0;
 		}
 
-		return $schema;
-	}
+		$content = $db_info->get_default_content();
+		if ( empty( $content ) ) {
+			return 0;
+		}
 
+		$to_remove = $db_info->get_autofilled_keys();
+		foreach ( $to_remove as $remove_key ) {
+			unset ( $columns[ $remove_key ] );
+		}
+
+		$keys = join( ",", array_keys( $columns ) );
+
+		$sql = "INSERT INTO $table ($keys) VALUES $content;";
+
+		return $this->wpdb->query( $sql );
+	}
 }

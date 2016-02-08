@@ -15,7 +15,7 @@ interface Mlp_Data_Access {
 
 	/**
 	 *
-	 * @param   Array $params array(
+	 * @param   array $params array(
 	 *                          'page'      => Integer      // -1 to load all
 	 *                          'fields'    => Array,       // Array with fields. Empty to load all
 	 *                          'where'     => Array(
@@ -31,7 +31,7 @@ interface Mlp_Data_Access {
 	 *                              ),
 	 *                        )
 	 * @param   String $type
-	 * @return  Array $results
+	 * @return  array $results
 	 */
 	public function get_items( array $params = array(), $type = OBJECT_K );
 

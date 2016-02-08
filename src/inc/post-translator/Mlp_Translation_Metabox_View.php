@@ -1,10 +1,7 @@
 <?php
+
 /**
  * Meta box output.
- *
- * @author  Inpsyde GmbH, toscho
- * @version 2014.03.13
- * @license GPL
  */
 class Mlp_Translation_Metabox_View {
 
@@ -19,7 +16,8 @@ class Mlp_Translation_Metabox_View {
 	 * @param Inpsyde_Nonce_Validator_Interface $nonce
 	 */
 	public function __construct( Inpsyde_Nonce_Validator_Interface $nonce ) {
-		$this->nonce   = $nonce;
+
+		$this->nonce = $nonce;
 	}
 
 	/**
@@ -27,6 +25,7 @@ class Mlp_Translation_Metabox_View {
 	 *
 	 * @param WP_Post $post
 	 * @param array   $meta_box
+	 *
 	 * @return void
 	 */
 	public function render( WP_Post $post, Array $meta_box ) {
@@ -35,97 +34,96 @@ class Mlp_Translation_Metabox_View {
 		?>
 		<!-- MultilingualPress Translation Box -->
 		<div class="holder mlp-translation-meta-box">
-		<?php
+			<?php
+			$data = (object) $meta_box['args'];
 
-		$data = (object) $meta_box['args'];
+			/**
+			 * Runs before the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				'mlp_translation_meta_box_top',
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
 
-		/**
-		 * Runs before the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			'mlp_translation_meta_box_top',
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
+			/**
+			 * Runs before the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				"mlp_translation_meta_box_top_{$data->remote_blog_id}",
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
 
-		/**
-		 * Runs before the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			"mlp_translation_meta_box_top_{$data->remote_blog_id}",
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
+			/**
+			 * Runs with the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				'mlp_translation_meta_box_main',
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
 
-		/**
-		 * Runs with the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			'mlp_translation_meta_box_main',
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
+			/**
+			 * Runs with the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				"mlp_translation_meta_box_main_{$data->remote_blog_id}",
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
 
-		/**
-		 * Runs with the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			"mlp_translation_meta_box_main_{$data->remote_blog_id}",
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
+			/**
+			 * Runs before the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				'mlp_translation_meta_box_bottom',
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
 
-		/**
-		 * Runs before the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			'mlp_translation_meta_box_bottom',
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
-
-		/**
-		 * Runs before the main content of the meta box.
-		 *
-		 * @param WP_Post $post           Post object.
-		 * @param int     $remote_blog_id Remote blog ID.
-		 * @param WP_Post $remote_post    Remote post object.
-		 */
-		do_action(
-			"mlp_translation_meta_box_bottom_{$data->remote_blog_id}",
-			$post,
-			$data->remote_blog_id,
-			$data->remote_post
-		);
-		?>
+			/**
+			 * Runs before the main content of the meta box.
+			 *
+			 * @param WP_Post $post           Post object.
+			 * @param int     $remote_blog_id Remote blog ID.
+			 * @param WP_Post $remote_post    Remote post object.
+			 */
+			do_action(
+				"mlp_translation_meta_box_bottom_{$data->remote_blog_id}",
+				$post,
+				$data->remote_blog_id,
+				$data->remote_post
+			);
+			?>
 		</div>
 		<!-- /MultilingualPress Translation Box -->
-	<?php
+		<?php
 	}
 
 	/**
@@ -137,7 +135,9 @@ class Mlp_Translation_Metabox_View {
 	 */
 	public function show_title(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		if ( ! empty( $post->post_title ) ) {
@@ -154,10 +154,13 @@ class Mlp_Translation_Metabox_View {
 	 */
 	public function show_editor(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $remote_post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $remote_post
 	) {
 
 		$lines = substr_count( $remote_post->post_content, "\n" ) + 1;
+
 		$rows = min( $lines, 10 );
 
 		printf(
@@ -171,26 +174,28 @@ class Mlp_Translation_Metabox_View {
 	/**
 	 * @param  WP_Post $post
 	 * @param  int     $blog_id
+	 *
 	 * @return void
 	 */
 	public function show_translation_checkbox(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $post, $blog_id
+		WP_Post $post,
+		$blog_id
 	) {
 
 		$id = (int) $blog_id;
 		?>
 		<p>
-			<label for="translate_this_post_<?php print $id; ?>">
+			<label for="translate_this_post_<?php echo $id; ?>">
 				<input
-					type  = "checkbox"
-					id    = "translate_this_post_<?php print $id; ?>"
-					name  = "mlp_to_translate[]"
-					value = "<?php print $id; ?>" />
+					type="checkbox"
+					id="translate_this_post_<?php echo $id; ?>"
+					name="mlp_to_translate[]"
+					value="<?php echo $id; ?>"
+				>
 				<?php _e( 'Translate this post', 'multilingual-press' ); ?>
 			</label>
 		</p>
-	<?php
+		<?php
 	}
-
 }

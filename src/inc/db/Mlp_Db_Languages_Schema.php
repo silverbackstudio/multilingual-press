@@ -1,13 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Class Mlp_Db_Languages_Schema
- *
- * Specific data for the language table.
- *
- * @version 2015.06.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * SQL table schema for the Languages table.
  */
 class Mlp_Db_Languages_Schema implements Mlp_Db_Schema_Interface {
 
@@ -92,7 +86,7 @@ class Mlp_Db_Languages_Schema implements Mlp_Db_Schema_Interface {
 	 */
 	public function get_index_sql() {
 
-		// Due to dbDelta: KEY (not INDEX), and no spaces inside brackets!
+		// Due to dbDelta: KEY (not INDEX), and space before but no spaces inside brackets!
 		return 'KEY (http_name)';
 	}
 
@@ -1849,10 +1843,9 @@ class Mlp_Db_Languages_Schema implements Mlp_Db_Schema_Interface {
 		$out = array();
 
 		foreach ( $fields as $field ) {
-			$out[ ] = "( '" . join( "', '", array_values( $field ) ) . "' )";
+			$out[] = "( '" . join( "', '", array_values( $field ) ) . "' )";
 		}
 
 		return join( ",", $out );
 	}
-
 }

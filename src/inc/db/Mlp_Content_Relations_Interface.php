@@ -1,115 +1,86 @@
 <?php # -*- coding: utf-8 -*-
+
 /**
- * Relationships between content blocks (posts, terms, whatever).
- *
- * @version 2015.07.30
- * @author  Inpsyde GmbH, toscho, tf
- * @license GPL
+ * Interface for the relationships between content elements.
  */
 interface Mlp_Content_Relations_Interface {
 
 	/**
 	 * Set a relation according to the given parameters.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int $relationship_id Relationship ID.
+	 * @param int $site_id         Site ID.
+	 * @param int $content_id      Content ID.
 	 *
 	 * @return bool
 	 */
-	public function set_relation(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type = 'post'
+	public function set_relation( $relationship_id, $site_id, $content_id );
+
+	/**
+	 * Return the content ID for the given arguments.
+	 *
+	 * @param int $relationship_id Relationship ID.
+	 * @param int $site_id         Site ID.
+	 *
+	 * @return int
+	 */
+	public function get_content_id( $relationship_id, $site_id );
+
+	/**
+	 * Delete all relations for the given site ID.
+	 *
+	 * @param int $site_id Site ID.
+	 *
+	 * @return int
+	 */
+	public function delete_all_relations_for_site( $site_id );
+
+	/**
+	 * Delete the relation for the given arguments.
+	 *
+	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as value.
+	 * @param string $type        Content type.
+	 *
+	 * @return int
+	 */
+	public function delete_relation( array $content_ids, $type );
+
+	/**
+	 * Return the relationship ID for the given arguments.
+	 *
+	 * @param int[]  $content_ids Array with site IDs as keys and content IDs as values.
+	 * @param string $type        Content type.
+	 * @param bool   $create      Optional. Create a new relationship if not exists? Defaults to FALSE.
+	 *
+	 * @return int
+	 */
+	public function get_relationship_id( array $content_ids, $type, $create = false );
+
+	/**
+	 * Return the content ID in the given target site for the given source content element.
+	 *
+	 * @param int    $site_id        Source site ID.
+	 * @param int    $content_id     Source post ID or term taxonomy ID.
+	 * @param string $type           Content type.
+	 * @param int    $target_site_id Target site ID.
+	 *
+	 * @return int
+	 */
+	public function get_content_id_for_site(
+		$site_id,
+		$content_id,
+		$type,
+		$target_site_id
 	);
 
 	/**
 	 * Return an array with site IDs as keys and content IDs as values.
 	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param string $type              Content type.
+	 * @param int    $site_id    Source site ID.
+	 * @param int    $content_id Source post ID or term taxonomy ID.
+	 * @param string $type       Content type.
 	 *
 	 * @return array
 	 */
-	public function get_relations( $source_site_id, $source_content_id, $type = 'post' );
-
-	/**
-	 * Delete a relation according to the given parameters.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return int Number of deleted rows
-	 */
-	public function delete_relation(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id = 0,
-		$type = 'post'
-	);
-
-	/**
-	 * Return the existing (or new) translation IDs according to the given parameters.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return array
-	 */
-	public function get_translation_ids(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type
-	);
-
-	/**
-	 * Return the existing translation IDs according to the given parameters.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param int    $target_content_id Target post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return array
-	 */
-	public function get_existing_translation_ids(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$target_content_id,
-		$type
-	);
-
-	/**
-	 * Return the term taxonomy ID of the given target site for the given source term.
-	 *
-	 * @param int    $source_site_id    Source blog ID.
-	 * @param int    $target_site_id    Target blog ID.
-	 * @param int    $source_content_id Source post ID or term taxonomy ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return int
-	 */
-	public function get_element_for_site(
-		$source_site_id,
-		$target_site_id,
-		$source_content_id,
-		$type
-	);
-
+	public function get_relations( $site_id, $content_id, $type );
 }

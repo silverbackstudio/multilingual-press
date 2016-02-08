@@ -50,17 +50,15 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 
 		global $wpdb;
 
-		$all = $wpdb->get_results(
-			"SELECT COUNT(*) as amount FROM `{$this->table_name}`",
-			OBJECT_K // Makes the result the first and only key.
-		);
-		return (int) key( $all );
+		$total_items_number = (int) $wpdb->get_var( "SELECT COUNT(*) as amount FROM `{$this->table_name}`" );
+
+		return $total_items_number;
 	}
 
 	/**
-	 * @param   Array $params
+	 * @param   array $params
 	 * @param   String $type
-	 * @return  Array $results
+	 * @return  array $results
 	 */
 	public function get_items( array $params = array(), $type = OBJECT_K ) {
 		global $wpdb;

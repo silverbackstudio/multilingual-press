@@ -1,23 +1,17 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Interface for meta data.
- *
- * Used by the view.
- *
- * @author  Inpsyde GmbH, toscho, tf
- * @version 2015.08.21
- * @license GPL
+ * Interface for the post translation data model. Used by the view.
  */
 interface Mlp_Translatable_Post_Data_Interface {
 
 	/**
 	 * @param WP_Post $source_post
-	 * @param int     $blog_id
+	 * @param int     $site_id
 	 *
 	 * @return WP_Post
 	 */
-	public function get_remote_post( WP_Post $source_post, $blog_id );
+	public function get_remote_post( WP_Post $source_post, $site_id );
 
 	/**
 	 * @param string $post_type
@@ -27,11 +21,11 @@ interface Mlp_Translatable_Post_Data_Interface {
 	public function get_dummy_post( $post_type );
 
 	/**
-	 * @param int $blog_id
+	 * @param int $site_id
 	 *
 	 * @return string
 	 */
-	public function get_remote_language( $blog_id );
+	public function get_remote_language( $site_id );
 
 	/**
 	 * @param WP_Post $post
@@ -75,11 +69,11 @@ interface Mlp_Translatable_Post_Data_Interface {
 	public function find_post_parents( $post_type, $post_parent );
 
 	/**
-	 * @param $blog_id
+	 * @param $site_id
 	 *
 	 * @return int
 	 */
-	public function get_post_parent( $blog_id );
+	public function get_post_parent( $site_id );
 
 	/**
 	 * Figure out the post ID.
@@ -100,5 +94,4 @@ interface Mlp_Translatable_Post_Data_Interface {
 	 * @return void
 	 */
 	public function set_save_context( array $save_context = array() );
-
 }

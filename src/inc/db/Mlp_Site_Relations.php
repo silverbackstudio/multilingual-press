@@ -1,12 +1,19 @@
-<?php
+<?php # -*- coding: utf-8 -*-
+
 /**
  * Handle relationships between sites (blogs) in a network.
- *
- * @version 2014.07.13
- * @author  Inpsyde GmbH, toscho
- * @license GPL
  */
 class Mlp_Site_Relations implements Mlp_Site_Relations_Interface {
+
+	/**
+	 * @var string
+	 */
+	private $cache_group = 'mlp';
+
+	/**
+	 * @var string
+	 */
+	private $table;
 
 	/**
 	 * @var wpdb
@@ -14,73 +21,82 @@ class Mlp_Site_Relations implements Mlp_Site_Relations_Interface {
 	private $wpdb;
 
 	/**
-	 * @var string
+	 * @param wpdb                    $wpdb
+	 * @param Mlp_Db_Schema_Interface $schema
 	 */
-	private $link_table_name;
+	public function __construct( wpdb $wpdb, Mlp_Db_Schema_Interface $schema ) {
 
-	/**
-	 * Internal cache for related sites.
-	 *
-	 * @var array
-	 */
-	private $related_sites = array ();
+		$this->wpdb = $wpdb;
 
-	/**
-	 * Constructor
-	 *
-	 * @param wpdb   $wpdb
-	 * @param string $link_table_name
-	 */
-	public function __construct( wpdb $wpdb, $link_table_name ) {
-
-		$this->wpdb            = $wpdb;
-		$this->link_table_name = $wpdb->base_prefix . $link_table_name;
+		$this->table = $schema->get_table_name();
 	}
 
 	/**
-	 * Fetch related sites.
+	 * Return all related sites for the given site.
 	 *
-	 * @param  int  $site_id
-	 * @return array
+	 * @param int $site_id
+	 *
+	 * @return int[]
 	 */
 	public function get_related_sites( $site_id = 0 ) {
 
-		$site_id = $this->empty_site_id_fallback( $site_id );
+		if ( ! $site_id ) {
+			$site_id = get_current_blog_id();
+		}
 
-		if ( isset ( $this->related_sites[ $site_id ] ) )
-			return $this->related_sites[ $site_id ];
+		$cache_key = $this->get_cache_key( $site_id );
 
-		$sql = $this->get_related_sites_sql( $site_id );
+		$cache = wp_cache_get( $cache_key, $this->cache_group );
+		if ( is_array( $cache ) ) {
+			return $cache;
+		}
 
-		$this->related_sites[ $site_id ] = $this->wpdb->get_col( $sql );
+		$sql = "
+SELECT DISTINCT IF (site_1 = %d, site_2, site_1) AS site_id
+FROM {$this->table}
+WHERE (
+		site_1 = %d
+		OR site_2 = %d
+	)";
+		$sql = $this->wpdb->prepare( $sql, $site_id, $site_id, $site_id );
 
-		return $this->related_sites[ $site_id ];
+		$related_sites = $this->wpdb->get_col( $sql );
+		$related_sites = array_map( 'intval', $related_sites );
+
+		wp_cache_set( $cache_key, $related_sites, $this->cache_group );
+
+		return $related_sites;
 	}
 
 	/**
 	 * Create new relation for one site with one or more others.
 	 *
-	 * @param int $site_1
+	 * @param int       $site_1
 	 * @param int|array $sites ID or array of IDs
+	 *
 	 * @return int Number of affected rows.
 	 */
 	public function set_relation( $site_1, $sites ) {
-		$sites  = (array) $sites;
-		$values = array ();
 
-		foreach ( $sites as $site_id ) {
-			if ( $site_1 !== $site_id )
+		$values = array();
+
+		foreach ( (array) $sites as $site_id ) {
+			if ( $site_1 !== $site_id ) {
 				$values[] = $this->get_value_pair( $site_1, $site_id );
+
+				wp_cache_delete( $this->get_cache_key( $site_id ), $this->cache_group );
+			}
 		}
 
-		if ( empty ( $values ) )
+		if ( empty( $values ) ) {
 			return 0;
+		}
 
-		$sql    = 'INSERT IGNORE INTO `' . $this->link_table_name
-			. '` ( `site_1`, `site_2` ) VALUES '
-			. join( ', ', $values );
+		$values = join( ', ', $values );
 
-		return (int) $this->wpdb->query( $sql );
+		wp_cache_delete( $this->get_cache_key( $site_1 ), $this->cache_group );
+
+		return (int) $this->wpdb->query( "INSERT IGNORE INTO {$this->table} (site_1, site_2) VALUES $values" );
 	}
 
 	/**
@@ -88,62 +104,64 @@ class Mlp_Site_Relations implements Mlp_Site_Relations_Interface {
 	 *
 	 * @param int $site_1
 	 * @param int $site_2 Optional. If left out, all relations will be deleted.
+	 *
 	 * @return int
 	 */
 	public function delete_relation( $site_1, $site_2 = 0 ) {
 
 		$site_1 = (int) $site_1;
-		$site_2 = (int) $site_2;
-		$sql    = "DELETE FROM {$this->link_table_name} WHERE (`site_1` = $site_1 OR `site_2` = $site_1)";
 
-		if ( 0 < $site_2 )
-			$sql .= " AND (`site_1` = $site_2 OR `site_2` = $site_2)";
+		$site_2 = (int) $site_2;
+
+		$sql = "
+DELETE
+FROM {$this->table}
+WHERE (
+		site_1 = $site_1
+		OR site_2 = $site_1
+	)";
+
+		wp_cache_delete( $this->get_cache_key( $site_1 ), $this->cache_group );
+
+		if ( 0 < $site_2 ) {
+			$sql .= "
+	AND (
+		site_1 = $site_2
+		OR site_2 = $site_2
+	)";
+
+			wp_cache_delete( $this->get_cache_key( $site_2 ), $this->cache_group );
+		}
 
 		return (int) $this->wpdb->query( $sql );
 	}
 
 	/**
-	 * Create SQL to fetch related sites.
+	 * Return the cache key for the given site ID.
 	 *
-	 * @param  int $site_id
+	 * @param int $site_id Site ID.
+	 *
 	 * @return string
 	 */
-	private function get_related_sites_sql( $site_id ) {
+	private function get_cache_key( $site_id ) {
 
-		$sql = 'SELECT DISTINCT IF (site_1 = %1$d, site_2, site_1) as blog_id
-			FROM ' . $this->link_table_name . '
-			WHERE (site_1 = %1$d OR site_2 = %1$d)';
-
-		return sprintf( $sql, $site_id );
+		return "mlp_site_relations_$site_id";
 	}
 
 	/**
-	 * Generate (val1, val2) syntax string.
+	 * Generate (val1,val2) syntax string.
 	 *
-	 * @param  int $site_1
-	 * @param  int $site_2
+	 * @param int $site_1
+	 * @param int $site_2
+	 *
 	 * @return string
 	 */
 	private function get_value_pair( $site_1, $site_2 ) {
 
-		// Swap values to make sure the lower value is the first.
-		if ( $site_1 > $site_2 )
-			list ( $site_1, $site_2 ) = array ( $site_2, $site_1 );
+		$site_1 = (int) $site_1;
 
-		return '(' . (int) $site_1 . ', ' . (int) $site_2 . ')';
-	}
+		$site_2 = (int) $site_2;
 
-	/**
-	 * Convert an empty site ID to the current site (blog) ID.
-	 *
-	 * @param  int $site_id
-	 * @return int
-	 */
-	private function empty_site_id_fallback( $site_id ) {
-
-		if ( 0 === (int) $site_id )
-			$site_id = get_current_blog_id();
-
-		return $site_id;
+		return $site_1 > $site_2 ? "($site_2,$site_1)" : "($site_1,$site_2)";
 	}
 }

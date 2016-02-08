@@ -8,17 +8,17 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	/**
 	 * @var array
 	 */
+	public $save_context = array();
+
+	/**
+	 * @var array
+	 */
 	private $allowed_post_types;
 
 	/**
 	 * @var Mlp_Content_Relations_Interface
 	 */
 	private $content_relations;
-
-	/**
-	 * @var string
-	 */
-	private $link_table;
 
 	/**
 	 * @var array
@@ -31,11 +31,6 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	private $post_request_data = array();
 
 	/**
-	 * @var array
-	 */
-	public $save_context = array();
-
-	/**
 	 * @var int
 	 */
 	private $source_site_id;
@@ -43,19 +38,17 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	/**
 	 * @param                                 $deprecated
 	 * @param array                           $allowed_post_types
-	 * @param string                          $link_table
+	 * @param                                 $deprecated
 	 * @param Mlp_Content_Relations_Interface $content_relations
 	 */
 	function __construct(
 		$deprecated,
 		array $allowed_post_types,
-		$link_table,
+		$deprecated,
 		Mlp_Content_Relations_Interface $content_relations
 	) {
 
 		$this->allowed_post_types = $allowed_post_types;
-
-		$this->link_table = $link_table;
 
 		$this->content_relations = $content_relations;
 
@@ -68,17 +61,17 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 
 	/**
 	 * @param  WP_Post $source_post
-	 * @param  int     $blog_id
+	 * @param  int     $site_id
 	 *
 	 * @return WP_Post
 	 */
-	public function get_remote_post( WP_Post $source_post, $blog_id ) {
+	public function get_remote_post( WP_Post $source_post, $site_id ) {
 
 		$post = null;
 
 		$linked = Mlp_Helpers::load_linked_elements( $source_post->ID, '', get_current_blog_id() );
-		if ( ! empty( $linked[ $blog_id ] ) && blog_exists( $blog_id ) ) {
-			$post = get_blog_post( $blog_id, $linked[ $blog_id ] );
+		if ( ! empty( $linked[ $site_id ] ) && blog_exists( $site_id ) ) {
+			$post = get_blog_post( $site_id, $linked[ $site_id ] );
 		}
 
 		if ( $post ) {
@@ -120,7 +113,8 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		$to_translate = $this->post_request_data['mlp_to_translate'];
 
 		$this->save_context = array(
-			'source_blog'    => get_current_blog_id(),
+			'source_site'    => get_current_blog_id(),
+			'source_blog'    => get_current_blog_id(), // Backwards compatibility
 			'source_post'    => $post,
 			'real_post_type' => $post_type,
 			'real_post_id'   => $post_id,
@@ -165,23 +159,24 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		/** This action is documented in inc/advanced-translator/Mlp_Advanced_Translator_Data.php */
 		do_action( 'mlp_before_post_synchronization', $this->save_context );
 
-		// Create a copy of the item for every related blog
-		foreach ( $to_translate as $blog_id ) {
-			if ( $blog_id == get_current_blog_id() or ! blog_exists( $blog_id ) ) {
+		// Create a copy of the item for every related site
+		foreach ( $to_translate as $site_id ) {
+			if ( $site_id == get_current_blog_id() or ! blog_exists( $site_id ) ) {
 				continue;
 			}
 
-			switch_to_blog( $blog_id );
+			switch_to_blog( $site_id );
 
 			// Set the linked parent post
-			$new_post['post_parent'] = $this->get_post_parent( $blog_id );
+			$new_post['post_parent'] = $this->get_post_parent( $site_id );
 
-			$this->save_context['target_blog_id'] = $blog_id;
+			$this->save_context['target_site_id'] = $site_id;
+			$this->save_context['target_blog_id'] = $site_id; // Backwards compatibility
 
 			/** This filter is documented in inc/advanced-translator/Mlp_Advanced_Translator_Data.php */
 			$new_post = apply_filters( 'mlp_pre_insert_post', $new_post, $this->save_context );
 
-			// Insert remote blog post
+			// Insert remote post
 			$remote_post_id = wp_insert_post( $new_post );
 
 			if ( ! empty( $post_meta ) ) {
@@ -219,7 +214,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 					}
 				}
 			}
-			$this->set_linked_element( $post_id, $blog_id, $remote_post_id );
+			$this->set_linked_element( $post_id, $site_id, $remote_post_id );
 
 			restore_current_blog();
 		}
@@ -246,21 +241,21 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	}
 
 	/**
-	 * @param $blog_id
+	 * @param $site_id
 	 *
 	 * @return int
 	 */
-	public function get_post_parent( $blog_id ) {
+	public function get_post_parent( $site_id ) {
 
 		if ( empty( $this->parent_elements ) ) {
 			return 0;
 		}
 
-		if ( empty( $this->parent_elements[ $blog_id ] ) ) {
+		if ( empty( $this->parent_elements[ $site_id ] ) ) {
 			return 0;
 		}
 
-		return $this->parent_elements[ $blog_id ];
+		return $this->parent_elements[ $site_id ];
 	}
 
 	/**
@@ -292,13 +287,19 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	 */
 	public function set_linked_element( $source_content_id, $remote_site_id, $remote_content_id ) {
 
-		$this->content_relations->set_relation(
-			$this->source_site_id,
-			$remote_site_id,
-			$source_content_id,
-			$remote_content_id,
-			'post'
+		$post_ids = array(
+			$this->source_site_id => $source_content_id,
+			$remote_site_id       => $remote_content_id,
 		);
+
+		$relationship_id = $this->content_relations->get_relationship_id( $post_ids, 'post', true );
+		if ( ! $relationship_id ) {
+			return;
+		}
+
+		foreach ( $post_ids as $site_id => $post_id ) {
+			$this->content_relations->set_relation( $relationship_id, $site_id, $post_id );
+		}
 	}
 
 	/**
@@ -399,25 +400,25 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	}
 
 	/**
-	 * @param  int $blog_id
+	 * @param  int $site_id
 	 *
 	 * @return string
 	 */
-	public function get_remote_language( $blog_id ) {
+	public function get_remote_language( $site_id ) {
 
-		static $blogs = false;
+		static $sites = false;
 
-		if ( ! $blogs ) {
-			$blogs = get_site_option( 'inpsyde_multilingual' );
+		if ( ! $sites ) {
+			$sites = get_site_option( 'inpsyde_multilingual' );
 		}
 
-		$language = '(' . $blog_id . ')';
+		$language = '(' . $site_id . ')';
 
-		if ( empty( $blogs[ $blog_id ] ) ) {
+		if ( empty( $sites[ $site_id ] ) ) {
 			return $language;
 		}
 
-		$data = $blogs[ $blog_id ];
+		$data = $sites[ $site_id ];
 
 		if ( ! empty( $data['text'] ) ) {
 			return $data['text'];

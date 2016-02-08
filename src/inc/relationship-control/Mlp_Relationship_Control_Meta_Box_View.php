@@ -1,15 +1,14 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Class Mlp_Relationship_Control_Meta_Box_View
- *
- * Show control elements for relationship control feature.
- *
- * @version 2014.03.14
- * @author  Inpsyde GmbH, toscho
- * @license GPL
+ * Render the control elements for the relationship control feature.
  */
 class Mlp_Relationship_Control_Meta_Box_View {
+
+	/**
+	 * @var Mlp_Relationship_Control_Data
+	 */
+	private $data;
 
 	/**
 	 * @var WP_Post
@@ -19,7 +18,7 @@ class Mlp_Relationship_Control_Meta_Box_View {
 	/**
 	 * @var int
 	 */
-	private $site_id;
+	private $remote_post_id = 0;
 
 	/**
 	 * @var int
@@ -29,12 +28,12 @@ class Mlp_Relationship_Control_Meta_Box_View {
 	/**
 	 * @var int
 	 */
-	private $remote_post_id = 0;
+	private $site_id;
 
 	/**
-	 * @var Mlp_Relationship_Control_Data
+	 * @var string
 	 */
-	private $data;
+	private $search_input_id;
 
 	/**
 	 * @var Mlp_Updatable
@@ -45,18 +44,21 @@ class Mlp_Relationship_Control_Meta_Box_View {
 	 * @param Mlp_Relationship_Control_Data $data
 	 * @param Mlp_Updatable                 $updater
 	 */
-	public function __construct(
-		Mlp_Relationship_Control_Data $data,
-		Mlp_Updatable                 $updater
-	) {
+	public function __construct( Mlp_Relationship_Control_Data $data, Mlp_Updatable $updater ) {
 
-		$this->post            = $data->get_source_post();
-		$this->remote_site_id  = $data->get_remote_site_id();
-		$this->remote_post_id  = $data->get_remote_post_id();
-		$this->site_id         = get_current_blog_id();
-		$this->data            = $data;
-		$this->updater         = $updater;
+		$this->data = $data;
+
+		$this->updater = $updater;
+
+		$this->post = $data->get_source_post();
+
+		$this->remote_post_id = $data->get_remote_post_id();
+
+		$this->remote_site_id = $data->get_remote_site_id();
+
 		$this->search_input_id = "mlp_post_search_$this->remote_site_id";
+
+		$this->site_id = get_current_blog_id();
 	}
 
 	public function render() {
@@ -64,10 +66,19 @@ class Mlp_Relationship_Control_Meta_Box_View {
 		$this->localize_script();
 
 		$action_selector_id = "mlp_rsc_action_container_$this->remote_site_id";
+
 		$search_selector_id = "mlp_rsc_search_container_$this->remote_site_id";
+
+		$actions = array(
+			'stay' => esc_html__( 'Leave as is', 'multilingual-press' ),
+			'new'  => esc_html__( 'Create new post', 'multilingual-press' ),
+		);
+
+		if ( $this->remote_post_id ) {
+			$actions['disconnect'] = esc_html__( 'Remove relationship', 'multilingual-press' );
+		}
 		?>
-		<div class="mlp-relationship-control-box"
-			 style="margin: .5em 0 .5em auto ">
+		<div class="mlp-relationship-control-box" style="margin: .5em 0 .5em auto">
 			<?php
 			printf(
 				'<button type="button" class="button secondary mlp-rsc-button mlp-click-toggler" name="mlp_rsc_%2$d"
@@ -78,80 +89,56 @@ class Mlp_Relationship_Control_Meta_Box_View {
 				$search_selector_id
 			);
 			?>
-			<div id="<?php print $action_selector_id; ?>" class='hidden'>
+			<div id="<?php echo $action_selector_id; ?>" class="hidden">
 				<div class="mlp-rc-settings">
 					<div class="mlp-rc-actions" style="float: left; width: 20em;">
-						<?php
-						$actions = array (
-							'stay' => esc_html__( 'Leave as is', 'multilingual-press' ),
-							'new'  => esc_html__( 'Create new post', 'multilingual-press' ),
-						);
-
-						if ( $this->remote_post_id )
-							$actions[ 'disconnect' ] = esc_html__( 'Remove relationship', 'multilingual-press' );
-
-						foreach ( $actions as $key => $label )
-							print '<p>'
-								. $this->get_radio(
-									   $key,
-										   $label,
-										   'stay',
-										   'mlp-rc-action[' . $this->remote_site_id . ']',
-										   'mlp-rc-input-id-' . $this->remote_site_id
-								)
-								. '</p>';
-
-					?>
-					<p>
-						<label for="mlp-rc-input-id-<?php print $this->remote_site_id; ?>-search">
-							<input
-								type="radio"
-								name="mlp-rc-action[<?php print $this->remote_site_id; ?>]"
-								value="search"
-								class="mlp-state-toggler"
-								id="mlp-rc-input-id-<?php print $this->remote_site_id; ?>-search"
-								data-toggle-target="#<?php print $search_selector_id; ?>">
-							<?php esc_html_e( 'Select existing post &hellip;', 'multilingual-press' ) ?>
+						<?php foreach ( $actions as $key => $label ) : ?>
+							<p>
+								<?php
+								$this->print_radio(
+									$key,
+									$label,
+									'stay',
+									'mlp-rc-action[' . $this->remote_site_id . ']',
+									'mlp-rc-input-id-' . $this->remote_site_id
+								);
+								?>
+							</p>
+						<?php endforeach; ?>
+						<p>
+							<label for="mlp-rc-input-id-<?php echo $this->remote_site_id; ?>-search">
+								<input
+									type="radio"
+									name="mlp-rc-action[<?php echo $this->remote_site_id; ?>]"
+									value="search"
+									class="mlp-state-toggler"
+									id="mlp-rc-input-id-<?php echo $this->remote_site_id; ?>-search"
+									data-toggle-target="#<?php echo $search_selector_id; ?>">
+								<?php esc_html_e( 'Select existing post &hellip;', 'multilingual-press' ); ?>
+							</label>
+						</p>
+					</div>
+					<div id="<?php echo $search_selector_id; ?>" style="display: none; float: left; max-width: 30em">
+						<label for="<?php echo $this->search_input_id; ?>">
+							<?php esc_html_e( 'Live search', 'multilingual-press' ); ?>
 						</label>
-					</p>
-				</div>
-
-					<div id="<?php print $search_selector_id; ?>"
-						 style="display:none;float:left;max-width:30em">
-
-						<label for="<?php print $this->search_input_id; ?>">
-							<?php
-							esc_html_e( 'Live search', 'multilingual-press' );
-							?>
-						</label>
-						<?php
-						print $this->get_search_input( $this->search_input_id );
-						?>
-
-						<ul class="mlp-search-results"
-							id="mlp-search-results-<?php print $this->remote_site_id; ?>">
-							<?php
-							$this->updater->update( 'default.remote.posts' );
-							?>
+						<?php echo $this->get_search_input( $this->search_input_id ); ?>
+						<ul class="mlp-search-results" id="mlp-search-results-<?php echo $this->remote_site_id; ?>">
+							<?php $this->updater->update( 'default.remote.posts' ); ?>
 						</ul>
 					</div>
 				</div>
 				<p>
-					<?php
-					$data_attrs = $this->add_id_values( '' );
-					?>
-					<input type="button"
-						   class="button button-primary mlp-save-relationship-button"
-						   value="<?php
-						   esc_attr_e( 'Save and reload this page', 'multilingual-press' );
-						   ?>" <?php print $data_attrs; ?>>
-					<span class="description"><?php
-						esc_html_e( 'Please save other changes first separately.', 'multilingual-press' );
-						?></span>
+					<input type="button" <?php echo $this->get_id_values(); ?>
+						class="button button-primary mlp-save-relationship-button"
+						value="<?php esc_attr_e( 'Save and reload this page', 'multilingual-press' ); ?>">
+					<span class="description">
+						<?php esc_html_e( 'Please save other changes first separately.', 'multilingual-press' ); ?>
+					</span>
 				</p>
 			</div>
 		</div>
-	<?php
+		<?php
 	}
 
 	/**
@@ -173,59 +160,66 @@ class Mlp_Relationship_Control_Meta_Box_View {
 	}
 
 	/**
-	 * @param string $id
-	 * @return string
-	 */
-	private function get_search_input( $id ) {
-
-		$input = '<input type="search" class="mlp-search-field" id="' . $id . '"';
-		$input = $this->add_id_values( $input );
-
-		return $input . '>';
-	}
-
-	/**
-	 * Add data attributes to a string.
-	 *
-	 * @param $str
-	 * @return string
-	 */
-	private function add_id_values( $str ) {
-
-		$data = array (
-			'results-container-id' => "mlp-search-results-{$this->remote_site_id}",
-			'source-site-id'       => $this->site_id,
-			'source-post-id'       => $this->post->ID,
-			'remote-site-id'       => $this->remote_site_id,
-			'remote-post-id'       => $this->remote_post_id,
-		);
-
-		foreach ( $data as $key => $value )
-			$str .= " data-$key='$value'";
-
-		return $str;
-	}
-
-	/**
 	 * @param string $key
 	 * @param string $label
 	 * @param string $selected
 	 * @param string $name
 	 * @param string $id_base
-	 * @return string
+	 *
+	 * @return void
 	 */
-	private function get_radio( $key, $label, $selected, $name, $id_base ) {
+	private function print_radio(
+		$key,
+		$label,
+		$selected,
+		$name,
+		$id_base
+	) {
 
-		return sprintf(
+		printf(
 			'<label for="%5$s-%1$s">
 				<input type="radio" name="%4$s" id="%5$s-%1$s" value="%1$s"%3$s>
 				%2$s
 			</label>',
 			$key,
 			$label,
-			selected( $name, $selected, FALSE ),
+			selected( $name, $selected, false ),
 			$name,
 			$id_base
 		);
+	}
+
+	/**
+	 * @param string $id
+	 *
+	 * @return string
+	 */
+	private function get_search_input( $id ) {
+
+		return '<input type="search" class="mlp-search-field" id="' . $id . '"' . $this->get_id_values() . '>';
+	}
+
+	/**
+	 * Return the data attributes as string.
+	 *
+	 * @return string
+	 */
+	private function get_id_values() {
+
+		$str = '';
+
+		$data = array(
+			'results-container-id' => "mlp-search-results-{$this->remote_site_id}",
+			'source-site-id' => $this->site_id,
+			'source-post-id' => $this->post->ID,
+			'remote-site-id' => $this->remote_site_id,
+			'remote-post-id' => $this->remote_post_id,
+		);
+
+		foreach ( $data as $key => $value ) {
+			$str .= " data-$key='$value'";
+		}
+
+		return $str;
 	}
 }

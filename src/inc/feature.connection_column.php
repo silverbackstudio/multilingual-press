@@ -1,10 +1,6 @@
 <?php # -*- coding: utf-8 -*-
-/**
- * Add related sites to each site in the network site view
- *
- * @version  2015-06-11
- */
-if ( is_admin() && ! empty( $GLOBALS[ 'pagenow' ] ) && 'sites.php' === $GLOBALS[ 'pagenow' ] ) {
+
+if ( is_admin() && ! empty( $GLOBALS['pagenow'] ) && 'sites.php' === $GLOBALS['pagenow'] ) {
 	add_action( 'inpsyde_mlp_loaded', 'mlp_feature_connection_column' );
 }
 
@@ -37,7 +33,8 @@ function mlp_feature_connection_column() {
  */
 function mlp_render_related_blog_column(
 	/** @noinspection PhpUnusedParameterInspection */
-	$column_name, $blog_id
+	$column_name,
+	$blog_id
 ) {
 
 	switch_to_blog( $blog_id );

@@ -1,23 +1,9 @@
-<?php
+<?php # -*- coding: utf-8 -*-
 
 /**
- * Mlp_Term_Connector
- *
- * @version 2015.07.06
- * @author  Inpsyde GmbH, toscho, tf
- * @license GPL
+ * Handle term relations.
  */
 class Mlp_Term_Connector {
-
-	/**
-	 * @var Inpsyde_Nonce_Validator_Interface
-	 */
-	private $nonce;
-
-	/**
-	 * @var string
-	 */
-	private $taxonomies;
 
 	/**
 	 * @var Mlp_Content_Relations_Interface
@@ -25,35 +11,60 @@ class Mlp_Term_Connector {
 	private $content_relations;
 
 	/**
+	 * @var string
+	 */
+	private $content_type = 'term';
+
+	/**
 	 * @var int
 	 */
 	private $current_site_id;
 
 	/**
-	 * @var array
+	 * @var Inpsyde_Nonce_Validator_Interface
 	 */
-	private $post_data;
+	private $nonce;
+
+	/**
+	 * @var int[]
+	 */
+	private $post_data = array();
+
+	/**
+	 * @var string[]
+	 */
+	private $taxonomies;
 
 	/**
 	 * Constructor. Set up the properties.
 	 *
 	 * @param Mlp_Content_Relations_Interface   $content_relations Content relations object.
 	 * @param Inpsyde_Nonce_Validator_Interface $nonce             Nonce validator object.
-	 * @param array                             $taxonomies        Taxonomy names.
-	 * @param array                             $post_data         Post data.
+	 * @param string[]                          $taxonomies        Taxonomy names.
 	 */
 	public function __construct(
 		Mlp_Content_Relations_Interface $content_relations,
 		Inpsyde_Nonce_Validator_Interface $nonce,
-		array $taxonomies,
-		array $post_data
+		array $taxonomies
 	) {
 
-		$this->nonce = $nonce;
-		$this->taxonomies = $taxonomies;
 		$this->content_relations = $content_relations;
+
+		$this->nonce = $nonce;
+
+		$this->taxonomies = $taxonomies;
+
 		$this->current_site_id = get_current_blog_id();
-		$this->post_data = $post_data;
+	}
+
+	/**
+	 * Set the post data array.
+	 *
+	 * @param string[] $post_data Post data.
+	 */
+	public function set_post_data( array $post_data ) {
+
+		$this->post_data = array_map( 'intval', $post_data );
 	}
 
 	/**
@@ -63,7 +74,7 @@ class Mlp_Term_Connector {
 	 * @wp-hook delete_term
 	 * @wp-hook edit_term
 	 *
-	 * @param int    $term_id          Term ID. Not used.
+	 * @param int    $term_id          Unused. Term ID.
 	 * @param int    $term_taxonomy_id Term taxonomy ID.
 	 * @param string $taxonomy         Taxonomy slug.
 	 *
@@ -71,11 +82,17 @@ class Mlp_Term_Connector {
 	 */
 	public function change_term_relationships(
 		/** @noinspection PhpUnusedParameterInspection */
-		$term_id, $term_taxonomy_id, $taxonomy
+		$term_id,
+		$term_taxonomy_id,
+		$taxonomy
 	) {
 
-		if ( ! $this->is_valid_request( $taxonomy ) ) {
-			return FALSE;
+		if ( ! $this->nonce->is_valid() ) {
+			return false;
+		}
+
+		if ( ! in_array( $taxonomy, $this->taxonomies ) ) {
+			return false;
 		}
 
 		/**
@@ -85,7 +102,7 @@ class Mlp_Term_Connector {
 		 */
 		$term_taxonomy_id = (int) $term_taxonomy_id;
 
-		$success = FALSE;
+		$success = false;
 
 		$current_filter = current_filter();
 
@@ -97,12 +114,7 @@ class Mlp_Term_Connector {
 			 * @param string $taxonomy         Taxonomy name.
 			 * @param string $current_filter   Current filter.
 			 */
-			do_action(
-				'mlp_before_term_synchronization',
-				$term_taxonomy_id,
-				$taxonomy,
-				$current_filter
-			);
+			do_action( 'mlp_before_term_synchronization', $term_taxonomy_id, $taxonomy, $current_filter );
 
 			$success = call_user_func( array( $this, $current_filter ), $term_taxonomy_id );
 
@@ -114,89 +126,10 @@ class Mlp_Term_Connector {
 			 * @param string $current_filter   Current filter.
 			 * @param bool   $success          Denotes whether or not the database was changed.
 			 */
-			do_action(
-				'mlp_after_term_synchronization',
-				$term_taxonomy_id,
-				$taxonomy,
-				$current_filter,
-				$success
-			);
+			do_action( 'mlp_after_term_synchronization', $term_taxonomy_id, $taxonomy, $current_filter, $success );
 		}
 
 		return $success;
-	}
-
-	/**
-	 * Handle term creation.
-	 *
-	 * @param int $term_taxonomy_id Term taxonomy ID.
-	 *
-	 * @return bool
-	 */
-	public function create_term( $term_taxonomy_id ) {
-
-		$success = FALSE;
-
-		foreach ( $this->post_data as $target_site_id => $target_term_taxonomy_id ) {
-			$target_term_taxonomy_id = (int) $target_term_taxonomy_id;
-
-			// There's nothing to do here
-			if ( -1 === $target_term_taxonomy_id ) {
-				continue;
-			}
-
-			$translation_ids = $this->content_relations->get_translation_ids(
-				$this->current_site_id,
-				$target_site_id,
-				$term_taxonomy_id,
-				$target_term_taxonomy_id,
-				'term'
-			);
-
-			if ( $translation_ids[ 'ml_source_blogid' ] !== $this->current_site_id ) {
-				$target_site_id = $this->current_site_id;
-				$target_term_taxonomy_id = $term_taxonomy_id;
-			}
-
-			$result = $this->content_relations->set_relation(
-				$translation_ids[ 'ml_source_blogid' ],
-				$target_site_id,
-				$translation_ids[ 'ml_source_elementid' ],
-				$target_term_taxonomy_id,
-				'term'
-			);
-			if ( $result ) {
-				$success = TRUE;
-			}
-		}
-
-		return $success;
-	}
-
-	/**
-	 * Handle term deletion.
-	 *
-	 * @param int $term_taxonomy_id Term taxonomy ID.
-	 *
-	 * @return bool
-	 */
-	public function delete_term( $term_taxonomy_id ) {
-
-		$translation_ids = $this->content_relations->get_translation_ids(
-			$this->current_site_id,
-			0,
-			$term_taxonomy_id,
-			0,
-			'term'
-		);
-
-		return $this->content_relations->delete_relation(
-			$translation_ids[ 'ml_source_blogid' ],
-			$this->current_site_id,
-			$translation_ids[ 'ml_source_elementid' ],
-			0,
-			'term'
-		);
 	}
 
 	/**
@@ -208,107 +141,73 @@ class Mlp_Term_Connector {
 	 */
 	public function edit_term( $term_taxonomy_id ) {
 
-		$success = FALSE;
+		if ( ! $this->post_data ) {
+			return false;
+		}
 
-		$existing = $this->content_relations->get_relations(
-			$this->current_site_id,
-			$term_taxonomy_id,
-			'term'
+		if ( ! array_diff( $this->post_data, array( 0 ) ) ) {
+			// All remote terms have been unselected, so delete the currently edited term rather than the remote ones
+			return $this->delete_term( $term_taxonomy_id );
+		}
+
+		return $this->create_term( $term_taxonomy_id );
+	}
+
+	/**
+	 * Handle term deletion.
+	 *
+	 * @param int $term_taxonomy_id Term taxonomy ID.
+	 *
+	 * @return bool
+	 */
+	public function delete_term( $term_taxonomy_id ) {
+
+		return (bool) $this->content_relations->delete_relation(
+			array( $this->current_site_id => $term_taxonomy_id ),
+			$this->content_type
 		);
+	}
 
-		foreach ( $this->post_data as $target_site_id => $target_term_taxonomy_id ) {
-			$result = $this->update_terms(
-				$existing,
-				$term_taxonomy_id,
-				$target_site_id,
-				(int) $target_term_taxonomy_id
-			);
-			if ( $result ) {
-				$success = TRUE;
-			}
+	/**
+	 * Handle term creation.
+	 *
+	 * @param int $term_taxonomy_id Term taxonomy ID.
+	 *
+	 * @return bool
+	 */
+	public function create_term( $term_taxonomy_id ) {
+
+		if ( ! $this->post_data ) {
+			return false;
+		}
+
+		return $this->set_relations( $this->post_data + array( $this->current_site_id => $term_taxonomy_id ) );
+	}
+
+	/**
+	 * Set the relations for the given term taxonomy IDs.
+	 *
+	 * @param int[] $term_taxonomy_ids Term taxonomy IDs.
+	 *
+	 * @return bool
+	 */
+	private function set_relations( array $term_taxonomy_ids ) {
+
+		$relationship_id = $this->content_relations->get_relationship_id(
+			$term_taxonomy_ids,
+			$this->content_type,
+			true
+		);
+		if ( ! $relationship_id ) {
+			return false;
+		}
+
+		$success = true;
+
+		foreach ( $term_taxonomy_ids as $site_id => $term_taxonomy_id ) {
+			$success &= $this->content_relations->set_relation( $relationship_id, $site_id, $term_taxonomy_id );
 		}
 
 		return $success;
 	}
-
-	/**
-	 * @param array $existing
-	 * @param int   $source_term_taxonomy_id
-	 * @param int   $target_site_id
-	 * @param int   $target_term_taxonomy_id
-	 *
-	 * @return bool
-	 */
-	private function update_terms(
-		array $existing,
-		$source_term_taxonomy_id,
-		$target_site_id,
-		$target_term_taxonomy_id
-	) {
-
-		// There's nothing to do here
-		if ( -1 === $target_term_taxonomy_id ) {
-			return TRUE;
-		}
-
-		if (
-			isset( $existing[ $target_site_id ] )
-			&& $existing[ $target_site_id ] === $target_term_taxonomy_id
-		) {
-			return TRUE;
-		}
-
-		$translation_ids = $this->content_relations->get_translation_ids(
-			$this->current_site_id,
-			$target_site_id,
-			$source_term_taxonomy_id,
-			$target_term_taxonomy_id,
-			'term'
-		);
-
-		if ( $translation_ids[ 'ml_source_blogid' ] !== $this->current_site_id ) {
-			$target_site_id = $this->current_site_id;
-			if ( 0 !== $target_term_taxonomy_id ) {
-				$target_term_taxonomy_id = $source_term_taxonomy_id;
-			}
-		}
-
-		// Delete a relation
-		if ( 0 === $target_term_taxonomy_id ) {
-			return $this->content_relations->delete_relation(
-				$translation_ids[ 'ml_source_blogid' ],
-				$target_site_id,
-				$translation_ids[ 'ml_source_elementid' ],
-				0,
-				'term'
-			);
-		}
-
-		return $this->content_relations->set_relation(
-			$translation_ids[ 'ml_source_blogid' ],
-			$target_site_id,
-			$translation_ids[ 'ml_source_elementid' ],
-			$target_term_taxonomy_id,
-			'term'
-		);
-	}
-
-	/**
-	 * @param string $taxonomy
-	 *
-	 * @return bool
-	 */
-	private function is_valid_request( $taxonomy ) {
-
-		if ( ! $this->nonce->is_valid() ) {
-			return FALSE;
-		}
-
-		if ( ! in_array( $taxonomy, $this->taxonomies ) ) {
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
 }

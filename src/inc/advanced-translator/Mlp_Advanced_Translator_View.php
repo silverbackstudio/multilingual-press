@@ -63,7 +63,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_title(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		$title = esc_attr( $post->post_title );
@@ -96,7 +98,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_name(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		$value = $post->post_name;
@@ -137,7 +141,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_excerpt(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		$value = $post->post_excerpt;
@@ -170,7 +176,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_editor(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $remote_post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $remote_post
 	) {
 
 		$editor_id = $this->get_id( $remote_blog_id, 'content' );
@@ -199,7 +207,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_thumbnail_checkbox(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		$id = $this->get_id( $remote_blog_id, 'thumbnail' );
@@ -229,7 +239,9 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_taxonomies(
 		/** @noinspection PhpUnusedParameterInspection */
-		WP_Post $source_post, $remote_blog_id, WP_Post $post
+		WP_Post $source_post,
+		$remote_blog_id,
+		WP_Post $post
 	) {
 
 		$taxonomies = $this->data->get_taxonomies( $post, $remote_blog_id );

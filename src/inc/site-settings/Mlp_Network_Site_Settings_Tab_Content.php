@@ -73,7 +73,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 
 			print '<table class="form-table mlp-admin-settings-table">';
 			$this->show_language_options( $siteoption, $languages );
-			$this->show_blog_relationships( $siteoption, $languages );
+			$this->show_blog_relationships( $siteoption );
 
 			/**
 			 * Runs at the end of but still inside the site settings table.
@@ -229,7 +229,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 			restore_current_blog();
 
 			// Get current settings
-			$related_blogs = $this->relations->get_related_sites( $this->blog_id, FALSE );
+			$related_blogs = $this->relations->get_related_sites( $this->blog_id );
 			$checked       = checked( TRUE, in_array( $blog_id, $related_blogs ), FALSE );
 			$id            = "related_blog_$blog_id";
 			?>

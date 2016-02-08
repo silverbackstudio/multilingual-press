@@ -33,6 +33,7 @@ function mlp_init() {
 	global $pagenow, $wp_version, $wpdb;
 
 	$plugin_path = plugin_dir_path( __FILE__ );
+
 	$plugin_url = plugins_url( '/', __FILE__ );
 
 	$assets_base = 'assets';
@@ -45,7 +46,7 @@ function mlp_init() {
 
 	$data = new Mlp_Plugin_Properties();
 
-	$data->set( 'loader',$loader->get_loader() );
+	$data->set( 'loader', $loader->get_loader() );
 
 	$locations = new Mlp_Internal_Locations();
 	$locations->add_dir( $plugin_path, $plugin_url, 'plugin' );
@@ -62,7 +63,7 @@ function mlp_init() {
 			$type
 		);
 	}
-	$data->set( 'locations',$locations );
+	$data->set( 'locations', $locations );
 
 	$data->set( 'plugin_file_path', __FILE__ );
 	$data->set( 'plugin_base_name', plugin_basename( __FILE__ ) );
@@ -73,7 +74,7 @@ function mlp_init() {
 			'text_domain_path' => 'Domain Path',
 			'plugin_uri'       => 'Plugin URI',
 			'plugin_name'      => 'Plugin Name',
-			'version'          => 'Version'
+			'version'          => 'Version',
 		)
 	);
 	foreach ( $headers as $name => $value ) {
@@ -100,7 +101,7 @@ function mlp_init() {
  */
 function mlp_pre_run_test( $pagenow, Inpsyde_Property_List_Interface $data, $wp_version, wpdb $wpdb ) {
 
-	$self_check = new Mlp_Self_Check( __FILE__, $pagenow );
+	$self_check         = new Mlp_Self_Check( __FILE__, $pagenow );
 	$requirements_check = $self_check->pre_install_check(
 		$data->get( 'plugin_name' ),
 		$data->get( 'plugin_base_name' ),
@@ -108,31 +109,66 @@ function mlp_pre_run_test( $pagenow, Inpsyde_Property_List_Interface $data, $wp_
 	);
 
 	if ( Mlp_Self_Check::PLUGIN_DEACTIVATED === $requirements_check ) {
-		return FALSE;
+		return false;
 	}
 
-	$data->set( 'site_relations', new Mlp_Site_Relations( $wpdb, 'mlp_site_relations' ) );
+	$site_relations_schema = new Mlp_Site_Relations_Schema( $wpdb );
+	$data->set( 'site_relations_schema', $site_relations_schema );
+	$data->set( 'site_relations', new Mlp_Site_Relations( $wpdb, $site_relations_schema ) );
+
+	$relationships_schema = new Mlp_Relationships_Schema( $wpdb );
+	$data->set( 'relationships_schema', $relationships_schema );
+
+	$content_relations_schema = new Mlp_Content_Relations_Schema( $wpdb );
+	$data->set( 'content_relations_schema', $content_relations_schema );
+	$data->set(
+		'content_relations',
+		new Mlp_Content_Relations(
+			$wpdb,
+			$content_relations_schema,
+			$relationships_schema
+		)
+	);
+	$data->set( 'content_relations_table', $content_relations_schema->get_table_name() );
+	$data->set( 'link_table', $content_relations_schema->get_table_name() ); // Backwards compatibility
 
 	if ( Mlp_Self_Check::INSTALLATION_CONTEXT_OK === $requirements_check ) {
-
-		$deactivator = new Mlp_Network_Plugin_Deactivation();
-
-		$last_version_option = get_site_option( 'mlp_version' );
-		$last_version = Mlp_Semantic_Version_Number_Factory::create( $last_version_option );
 		$current_version = Mlp_Semantic_Version_Number_Factory::create( $data->get( 'version' ) );
-		$upgrade_check = $self_check->is_current_version( $current_version, $last_version );
+
+		$last_version = Mlp_Semantic_Version_Number_Factory::create( get_site_option( 'mlp_version' ) );
+
 		$updater = new Mlp_Update_Plugin_Data( $data, $wpdb, $current_version, $last_version );
 
-		if ( Mlp_Self_Check::NEEDS_INSTALLATION === $upgrade_check ) {
-			$updater->install_plugin();
-		}
+		switch ( $self_check->is_current_version( $current_version, $last_version ) ) {
+			case Mlp_Self_Check::NEEDS_INSTALLATION:
+				$updater->install_plugin();
+				break;
 
-		if ( Mlp_Self_Check::NEEDS_UPGRADE === $upgrade_check ) {
-			$updater->update( $deactivator );
+			case Mlp_Self_Check::NEEDS_UPGRADE:
+				$deactivator = new Mlp_Network_Plugin_Deactivation();
+				$updater->update( $deactivator );
+				break;
 		}
 	}
 
-	return TRUE;
+	return true;
+}
+
+register_activation_hook( defined( 'MLP_PLUGIN_FILE' ) ? MLP_PLUGIN_FILE : __FILE__, 'mlp_activation' );
+
+/**
+ * Gets called on plugin activation.
+ *
+ * @return void
+ */
+function mlp_activation() {
+
+	if ( ! class_exists( 'Mlp_Activator' ) ) {
+		require plugin_dir_path( __FILE__ ) . 'inc/activation/Mlp_Activator.php';
+	}
+
+	$activator = new Mlp_Activator();
+	$activator->set_transient();
 }
 
 /**
