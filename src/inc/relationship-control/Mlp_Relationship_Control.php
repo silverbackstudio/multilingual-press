@@ -50,7 +50,7 @@ class Mlp_Relationship_Control implements Mlp_Updatable {
 
 		$method = substr( $_REQUEST['action'], $start ) . '_post';
 
-		if ( ! method_exists( $this->relationship_changer, $method ) ) {
+		if ( method_exists( $this->relationship_changer, $method ) ) {
 			$this->relationship_changer->$method();
 		}
 
