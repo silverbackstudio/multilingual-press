@@ -38,13 +38,13 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	/**
 	 * @param                                 $deprecated
 	 * @param array                           $allowed_post_types
-	 * @param                                 $deprecated
+	 * @param                                 $deprecated_2
 	 * @param Mlp_Content_Relations_Interface $content_relations
 	 */
 	function __construct(
 		$deprecated,
 		array $allowed_post_types,
-		$deprecated,
+		$deprecated_2,
 		Mlp_Content_Relations_Interface $content_relations
 	) {
 
