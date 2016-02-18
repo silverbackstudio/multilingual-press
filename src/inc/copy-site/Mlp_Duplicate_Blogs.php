@@ -1,54 +1,54 @@
 <?php # -*- coding: utf-8 -*-
+
 /**
- * Class Mlp_Duplicate_Blogs
- *
  * Create new blogs based on an existing one.
- *
- * @version 2014.09.28
- * @author  Inpsyde GmbH, toscho
- * @license GPL
  */
 class Mlp_Duplicate_Blogs {
 
 	/**
-	 * @type string
+	 * @var Mlp_Content_Relations_Interface
 	 */
-	private $link_table = '';
+	private $content_relations;
 
 	/**
-	 * @type wpdb
-	 */
-	private $wpdb;
-
-	/**
-	 * @type Mlp_Table_Duplicator_Interface
+	 * @var Mlp_Table_Duplicator_Interface
 	 */
 	private $duplicator;
 
 	/**
-	 * @type Mlp_Db_Table_List_Interface
+	 * @var Mlp_Db_Table_List_Interface
 	 */
 	private $table_names;
 
 	/**
+	 * @var wpdb
+	 */
+	private $wpdb;
+
+	/**
 	 * Constructor
 	 *
-	 * @param string                         $link_table
-	 * @param wpdb                           $wpdb
-	 * @param Mlp_Table_Duplicator_Interface $duplicator
-	 * @param Mlp_Db_Table_List_Interface    $table_names
+	 * @param                                 $deprecated
+	 * @param wpdb                            $wpdb
+	 * @param Mlp_Table_Duplicator_Interface  $duplicator
+	 * @param Mlp_Db_Table_List_Interface     $table_names
+	 * @param Mlp_Content_Relations_Interface $content_relations
 	 */
 	public function __construct(
-		                               $link_table,
-		wpdb                           $wpdb,
+		$deprecated,
+		wpdb $wpdb,
 		Mlp_Table_Duplicator_Interface $duplicator,
-		Mlp_Db_Table_List_Interface    $table_names
+		Mlp_Db_Table_List_Interface $table_names,
+		Mlp_Content_Relations_Interface $content_relations
 	) {
 
-		$this->link_table  = $link_table;
-		$this->wpdb        = $wpdb;
+		$this->wpdb = $wpdb;
+
 		$this->duplicator  = $duplicator;
+
 		$this->table_names = $table_names;
+
+		$this->content_relations = $content_relations;
 	}
 
 	/**
@@ -138,6 +138,9 @@ class Mlp_Duplicate_Blogs {
 		);
 
 		$this->insert_post_relations( $source_blog_id, $blog_id );
+
+		$this->insert_term_relations( $source_blog_id, $blog_id );
+
 		$this->copy_attachments( $source_blog_id, $blog_id, $blog_id );
 
 		// Set the search engine visibility
@@ -229,92 +232,66 @@ class Mlp_Duplicate_Blogs {
 	}
 
 	/**
-	 * Get all linked elements from source blog and set links to those in our new blog.
+	 * Insert relations between the corresponding posts in the sites with the given IDs.
 	 *
-	 * @param int $source_blog_id
-	 * @param int $target_blog_id
-	 * @return int|false Number of rows affected/selected or false on error
-	 */
-	private function insert_post_relations( $source_blog_id, $target_blog_id ) {
-
-		if ( $this->has_related_blogs( $source_blog_id ) )
-			return $this->copy_post_relationships( $source_blog_id, $target_blog_id );
-
-		return $this->create_post_relationships( $source_blog_id, $target_blog_id );
-	}
-
-
-	/**
-	 * Copy post relationships from source blog to target blog.
+	 * @param int $source_site_id Source site ID.
+	 * @param int $target_site_id Target site ID.
 	 *
-	 * @param int $source_blog_id
-	 * @param int $target_blog_id
-	 * @return int|FALSE Number of rows affected or FALSE on error
+	 * @return void
 	 */
-	private function copy_post_relationships( $source_blog_id, $target_blog_id ) {
+	private function insert_post_relations( $source_site_id, $target_site_id ) {
 
-		$query = "INSERT INTO `{$this->link_table}`
-		(
-			`ml_source_blogid`,
-			`ml_source_elementid`,
-			`ml_blogid`,
-			`ml_elementid`,
-			`ml_type`
-		)
-		SELECT
-			`ml_source_blogid`,
-			`ml_source_elementid`,
-			$target_blog_id,
-			`ml_elementid`,
-			`ml_type`
-		FROM `{$this->link_table}`
-		WHERE  `ml_blogid` = $source_blog_id";
+		$query = "
+SELECT ID
+FROM {$this->wpdb->posts}
+WHERE post_status IN('publish','future','draft','pending','private')";
 
-		return $this->wpdb->query( $query );
+		$post_ids = $this->wpdb->get_col( $query );
+
+		$this->insert_content_relations( $post_ids, $source_site_id, $target_site_id, 'post' );
 	}
 
 	/**
-	 * Create post relationships between all posts from source blog and target blog.
+	 * Insert relations between the corresponding terms in the sites with the given IDs.
 	 *
-	 * @param int $source_blog_id
-	 * @param int $target_blog_id
-	 * @return int|FALSE Number of rows affected or FALSE on error
+	 * @param int $source_site_id Source site ID.
+	 * @param int $target_site_id Target site ID.
+	 *
+	 * @return void
 	 */
-	private function create_post_relationships( $source_blog_id, $target_blog_id ) {
+	private function insert_term_relations( $source_site_id, $target_site_id ) {
 
-		$blogs  = array ( $source_blog_id, $target_blog_id );
-		$result = FALSE;
+		$query = "
+SELECT term_taxonomy_id
+FROM {$this->wpdb->term_taxonomy}";
 
-		foreach( $blogs as $blog ) {
-			$result = $this->wpdb->query(
-				"INSERT INTO {$this->link_table}
-				(
-					`ml_source_blogid`,
-					`ml_source_elementid`,
-					`ml_blogid`,
-					`ml_elementid`,
-					`ml_type`
-				)
-				SELECT $source_blog_id, `ID`, $blog, ID, 'post'
-					FROM {$this->wpdb->posts}
-					WHERE `post_status` IN('publish', 'future', 'draft', 'pending', 'private')"
+		$term_taxonomy_ids = $this->wpdb->get_col( $query );
+
+		$this->insert_content_relations( $term_taxonomy_ids, $source_site_id, $target_site_id, 'term' );
+	}
+
+	/**
+	 * Insert relations between the content elements in the sites with the given IDs.
+	 *
+	 * @param int[]  $content_ids    Array of content element IDs.
+	 * @param int    $source_site_id Source site ID.
+	 * @param int    $target_site_id Target site ID.
+	 * @param string $type           Content type.
+	 *
+	 * @return void
+	 */
+	private function insert_content_relations( $content_ids, $source_site_id, $target_site_id, $type ) {
+
+		foreach ( $content_ids as $content_id ) {
+			$relationship_id = $this->content_relations->get_relationship_id(
+				array( $source_site_id => (int) $content_id ),
+				$type,
+				true
 			);
+
+			$this->content_relations->set_relation( $relationship_id, $source_site_id, $content_id );
+			$this->content_relations->set_relation( $relationship_id, $target_site_id, $content_id );
 		}
-
-		return $result;
-	}
-
-	/**
-	 * Check if there are any registered relations for the source blog.
-	 *
-	 * @param  int $source_blog_id
-	 * @return boolean
-	 */
-	private function has_related_blogs( $source_blog_id ) {
-
-		$sql = "SELECT `ml_id` FROM {$this->link_table} WHERE `ml_blogid` = $source_blog_id LIMIT 2";
-
-		return 2 == $this->wpdb->query( $sql );
 	}
 
 	/**
@@ -497,5 +474,4 @@ class Mlp_Duplicate_Blogs {
 
 		return $this->wpdb->get_results( $sql, ARRAY_A );
 	}
-
 }
