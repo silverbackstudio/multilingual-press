@@ -87,10 +87,6 @@ class Mlp_Term_Connector {
 		$taxonomy
 	) {
 
-		if ( ! $this->nonce->is_valid() ) {
-			return false;
-		}
-
 		if ( ! in_array( $taxonomy, $this->taxonomies ) ) {
 			return false;
 		}
@@ -141,6 +137,10 @@ class Mlp_Term_Connector {
 	 */
 	public function edit_term( $term_taxonomy_id ) {
 
+		if ( ! $this->nonce->is_valid() ) {
+			return false;
+		}
+
 		if ( ! $this->post_data ) {
 			return false;
 		}
@@ -176,6 +176,10 @@ class Mlp_Term_Connector {
 	 * @return bool
 	 */
 	public function create_term( $term_taxonomy_id ) {
+
+		if ( ! $this->nonce->is_valid() ) {
+			return false;
+		}
 
 		if ( ! $this->post_data ) {
 			return false;
