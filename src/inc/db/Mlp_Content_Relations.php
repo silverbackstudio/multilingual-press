@@ -61,9 +61,13 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 		}
 
 		$current_content_id = $this->get_content_id( $relationship_id, $site_id );
-		if ( $current_content_id && $current_content_id !== $content_id ) {
-			// Delete different relation of the given site
-			$this->delete_relation_for_site( $relationship_id, $site_id, false );
+		if ( $current_content_id ) {
+			if ( $current_content_id === $content_id ) {
+				return true;
+			} else {
+				// Delete different relation of the given site
+				$this->delete_relation_for_site( $relationship_id, $site_id, false );
+			}
 		}
 
 		$type = $this->get_relationship_type( $relationship_id );
