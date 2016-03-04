@@ -645,7 +645,9 @@ WHERE http_name IN($values)";
 		}
 
 		// frontend
+		do_action( 'mlp_before_link' );
 		$url = get_permalink( $content_id );
+		do_action( 'mlp_after_link' );
 
 		if ( 'publish' === $post->post_status || $editable ) {
 			return array(
