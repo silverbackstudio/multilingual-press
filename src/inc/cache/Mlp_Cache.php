@@ -108,11 +108,29 @@ class Mlp_Cache {
 	 */
 	public function maybe_hashify( $data ) {
 
+		// TODO: Take care of Closures and Resources.
 		if ( is_array( $data ) || is_object( $data ) ) {
 			$data = md5( serialize( $data ) );
 		}
 
 		return (string) $data;
+	}
+
+	/**
+	 * Registers the execution of the given callback for the given action hook(s).
+	 *
+	 * @param callable        $callback The callback.
+	 * @param string|string[] $actions  One or more action hooks.
+	 *
+	 * @return void
+	 */
+	public function register_callback_for_action( callable $callback, $actions ) {
+
+		$actor = Mlp_Cache_Actor_Factory::create( $this, $callback );
+
+		foreach ( (array) $actions as $action ) {
+			add_action( (string) $action, array( $actor, 'act' ) );
+		}
 	}
 
 	/**
@@ -129,24 +147,7 @@ class Mlp_Cache {
 		$deletor = Mlp_Cache_Deletor_Factory::create( $this, $this->get_key( $key_fragments ) );
 
 		foreach ( (array) $actions as $action ) {
-			add_action( $action, array( $deletor, 'delete' ) );
-		}
-	}
-
-	/**
-	 * Registers the execution of the given callback for the given action hook(s).
-	 *
-	 * @param callable        $callback The callback.
-	 * @param string|string[] $actions  One or more action hooks.
-	 *
-	 * @return void
-	 */
-	public function register_callback_for_action( callable $callback, $actions ) {
-
-		$actor = Mlp_Cache_Actor_Factory::create( $this, $callback );
-
-		foreach ( (array) $actions as $action ) {
-			add_action( $action, array( $actor, 'act' ) );
+			add_action( (string) $action, array( $deletor, 'delete' ) );
 		}
 	}
 
