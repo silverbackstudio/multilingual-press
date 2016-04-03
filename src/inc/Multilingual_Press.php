@@ -415,7 +415,10 @@ class Multilingual_Press {
 	private function prepare_plugin_data() {
 
 		$site_relations = $this->plugin_data->get( 'site_relations' );
-		$table_list = new Mlp_Db_Table_List( $this->wpdb );
+		$table_list = new Mlp_Db_Table_List(
+			$this->wpdb,
+			new Mlp_Cache( 'table_names' )
+		);
 
 		$this->link_table = $this->wpdb->base_prefix . 'multilingual_linked';
 		$this->plugin_file_path = $this->plugin_data->get( 'plugin_file_path' );
@@ -428,7 +431,8 @@ class Multilingual_Press {
 			new Mlp_Content_Relations(
 				$this->wpdb,
 				$site_relations,
-				new Mlp_Db_Table_Name( $this->link_table, $table_list )
+				new Mlp_Db_Table_Name( $this->link_table, $table_list ),
+				new Mlp_Cache( 'content_relations' )
 			)
 		);
 		$this->plugin_data->set(
@@ -438,7 +442,8 @@ class Multilingual_Press {
 				'mlp_languages',
 				$site_relations,
 				$this->plugin_data->get( 'content_relations' ),
-				$this->wpdb
+				$this->wpdb,
+				new Mlp_Cache( 'translations' )
 			)
 		);
 		$this->plugin_data->set( 'assets', new Mlp_Assets( $this->plugin_data->get( 'locations' ) ) );

@@ -12,6 +12,11 @@
 class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 
 	/**
+	 * @var Mlp_Cache
+	 */
+	private $cache;
+
+	/**
 	 * @type wpdb
 	 */
 	private $wpdb;
@@ -22,18 +27,16 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 	private $no_tables_found = 'no_tables_found';
 
 	/**
-	 * @type string
-	 */
-	private $cache_group = 'mlp';
-
-	/**
 	 * Constructor.
 	 *
-	 * @param wpdb $wpdb
+	 * @param wpdb      $wpdb
+	 * @param Mlp_Cache $cache
 	 */
-	public function __construct( wpdb $wpdb ) {
+	public function __construct( wpdb $wpdb, Mlp_Cache $cache ) {
 
 		$this->wpdb = $wpdb;
+
+		$this->cache = $cache;
 
 		if ( ! function_exists( 'wp_get_db_schema' ) )
 			require_once ABSPATH . 'wp-admin/includes/schema.php';
@@ -47,19 +50,20 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 	 */
 	public function get_all_table_names() {
 
-		$cached = wp_cache_get( 'table_names', $this->cache_group );
+		$table_names = $this->cache->get();
+		if ( $table_names && is_array( $table_names ) ) {
+			return $table_names;
+		}
 
-		if ( ! empty ( $cached ) && is_array( $cached ) )
-			return $cached;
+		$table_names = $this->get_names_from_db();
 
-		$names = $this->get_names_from_db();
+		$this->cache->set( $table_names );
 
-		wp_cache_set( 'table_names', $names, $this->cache_group );
-
-		if ( array ( $this->no_tables_found ) === $names )
+		if ( array( $this->no_tables_found ) === $table_names ) {
 			return array();
+		}
 
-		return $names;
+		return $table_names;
 	}
 
 	/**

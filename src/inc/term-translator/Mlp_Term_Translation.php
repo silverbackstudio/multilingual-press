@@ -10,23 +10,45 @@
 class Mlp_Term_Translation {
 
 	/**
-	 * @var wpdb
-	 */
-	private $wpdb;
-
-	/**
 	 * @var WP_Rewrite
 	 */
 	private $wp_rewrite;
 
 	/**
+	 * @var wpdb
+	 */
+	private $wpdb;
+
+	/**
+	 * @var Mlp_Cache
+	 */
+	private $term_cache;
+
+	/**
+	 * @var Mlp_Cache
+	 */
+	private $translation_cache;
+
+	/**
 	 * @param wpdb       $wpdb
 	 * @param WP_Rewrite $wp_rewrite
+	 * @param Mlp_Cache  $translation_cache
+	 * @param Mlp_Cache  $term_cache
 	 */
-	public function __construct( wpdb $wpdb, WP_Rewrite $wp_rewrite ) {
+	public function __construct(
+		wpdb $wpdb,
+		WP_Rewrite $wp_rewrite,
+		Mlp_Cache $translation_cache,
+		Mlp_Cache $term_cache
+	) {
 
-		$this->wpdb       = $wpdb;
+		$this->wpdb = $wpdb;
+
 		$this->wp_rewrite = $wp_rewrite;
+
+		$this->translation_cache = $translation_cache;
+
+		$this->term_cache = $term_cache;
 	}
 
 	/**
@@ -41,21 +63,22 @@ class Mlp_Term_Translation {
 	 */
 	public function get_translation( $term_taxonomy_id, $target_site_id ) {
 
-		$cache = (array) wp_cache_get( 'mlp_term_translations', 'mlp' );
-		if ( isset ( $cache[ $target_site_id ][ $term_taxonomy_id ] ) ) {
-			return $cache[ $target_site_id ][ $term_taxonomy_id ];
+		$translations = $this->translation_cache->get();
+		if ( isset ( $translations[ $target_site_id ][ $term_taxonomy_id ] ) ) {
+			return $translations[ $target_site_id ][ $term_taxonomy_id ];
 		}
 
 		switch_to_blog( $target_site_id );
 
-		$result = $this->get_translation_in_target_site( $term_taxonomy_id );
+		$translation = $this->get_translation_in_target_site( $term_taxonomy_id );
 
 		restore_current_blog();
 
-		$cache[ $target_site_id ][ $term_taxonomy_id ] = $result;
-		wp_cache_set( 'mlp_term_translations', $cache, 'mlp' );
+		$translations[ $target_site_id ][ $term_taxonomy_id ] = $translation;
 
-		return $result;
+		$this->translation_cache->set( $translations );
+
+		return $translation;
 	}
 
 	/**
@@ -207,9 +230,7 @@ class Mlp_Term_Translation {
 	 */
 	private function get_term_by_term_taxonomy_id( $term_taxonomy_id ) {
 
-		$cache_key = $this->get_term_by_term_taxonomy_id_cache_key( $term_taxonomy_id );
-
-		$term = wp_cache_get( $cache_key, 'mlp' );
+		$term = $this->term_cache->get( $term_taxonomy_id );
 		if ( is_array( $term ) ) {
 			return $term;
 		}
@@ -226,20 +247,8 @@ LIMIT 1";
 			$term = array();
 		}
 
-		wp_cache_set( $cache_key, $term, 'mlp' );
+		$this->term_cache->set( $term, $term_taxonomy_id );
 
 		return $term;
-	}
-
-	/**
-	 * Returns the get_term_by_term_taxonomy_id cache key for the given term taxonomy ID.
-	 *
-	 * @param int $term_taxonomy_id Term taxonomy ID.
-	 *
-	 * @return string
-	 */
-	private function get_term_by_term_taxonomy_id_cache_key( $term_taxonomy_id ) {
-
-		return "term_with_ttid_$term_taxonomy_id";
 	}
 }

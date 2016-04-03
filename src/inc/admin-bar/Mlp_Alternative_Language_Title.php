@@ -6,6 +6,11 @@
 class Mlp_Alternative_Language_Title {
 
 	/**
+	 * @var Mlp_Cache
+	 */
+	private $cache;
+
+	/**
 	 * @var Mlp_Admin_Bar_Customizer
 	 */
 	private $customizer;
@@ -20,12 +25,19 @@ class Mlp_Alternative_Language_Title {
 	 *
 	 * @param Mlp_Alternative_Language_Title_Module $module     Module object.
 	 * @param Mlp_Admin_Bar_Customizer              $customizer Admin bar customizer.
+	 * @param Mlp_Cache                             $cache      A cache object.
 	 */
-	public function __construct( Mlp_Alternative_Language_Title_Module $module, Mlp_Admin_Bar_Customizer $customizer ) {
+	public function __construct(
+		Mlp_Alternative_Language_Title_Module $module,
+		Mlp_Admin_Bar_Customizer $customizer,
+		Mlp_Cache $cache
+	) {
 
 		$this->module = $module;
 
 		$this->customizer = $customizer;
+
+		$this->cache = $cache;
 	}
 
 	/**
@@ -35,7 +47,8 @@ class Mlp_Alternative_Language_Title {
 	 */
 	public function setup() {
 
-		add_action( 'mlp_blogs_save_fields', array( $this->customizer, 'update_cache' ) );
+		// TODO: With MultilingualPress 3.0.0, turn update_cache() into a closure.
+		$this->cache->register_callback_for_action( array( $this, 'update_cache' ), 'mlp_blogs_save_fields' );
 
 		if ( ! $this->module->setup() ) {
 			return false;
@@ -48,5 +61,31 @@ class Mlp_Alternative_Language_Title {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Updates the cache entry for the alternative language title of the updated site.
+	 * 
+	 * @wp-hook mlp_blogs_save_fields
+	 *
+	 * @param Mlp_Cache $cache
+	 *
+	 * @return void
+	 */
+	public function update_cache( Mlp_Cache $cache ) {
+
+		$site_id = isset( $_REQUEST['id'] ) ? (int) $_REQUEST['id'] : get_current_blog_id();
+		if ( 1 > $site_id ) {
+			return;
+		}
+
+		$titles = $cache->get();
+		if ( ! isset( $titles[ $site_id ] ) ) {
+			return;
+		}
+
+		unset( $titles[ $site_id ] );
+
+		$cache->set( $titles );
 	}
 }

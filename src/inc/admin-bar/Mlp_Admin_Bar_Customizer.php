@@ -6,14 +6,19 @@
 class Mlp_Admin_Bar_Customizer {
 
 	/**
-	 * @var string
+	 * @var Mlp_Cache
 	 */
-	private $cache_group = 'mlp';
+	private $cache;
 
 	/**
-	 * @var string
+	 * Constructor. Sets up the properties.
+	 *
+	 * @param Mlp_Cache $cache A cache object.
 	 */
-	private $cache_key = 'mlp_alternative_language_titles';
+	public function __construct( Mlp_Cache $cache ) {
+
+		$this->cache = $cache;
+	}
 
 	/**
 	 * Replaces all site names with the individual site's alternative language title, if not empty.
@@ -69,30 +74,6 @@ class Mlp_Admin_Bar_Customizer {
 	}
 
 	/**
-	 * Updates the cache entry for the alternative language title of the updated site.
-	 *
-	 * @wp-hook mlp_blogs_save_fields
-	 *
-	 * @return void
-	 */
-	public function update_cache() {
-
-		$site_id = isset( $_REQUEST['id'] ) ? (int) $_REQUEST['id'] : get_current_blog_id();
-		if ( 1 > $site_id ) {
-			return;
-		}
-
-		$titles = wp_cache_get( $this->cache_key, $this->cache_group );
-		if ( ! isset( $titles[ $site_id ] ) ) {
-			return;
-		}
-
-		unset( $titles[ $site_id ] );
-
-		wp_cache_set( $this->cache_key, $titles, $this->cache_group );
-	}
-
-	/**
 	 * Returns the alternative language title for the site with the given ID.
 	 *
 	 * @param int $site_id Site ID.
@@ -105,7 +86,7 @@ class Mlp_Admin_Bar_Customizer {
 			$site_id = get_current_blog_id();
 		}
 
-		$titles = wp_cache_get( $this->cache_key, $this->cache_group );
+		$titles = $this->cache->get();
 		if ( ! is_array( $titles ) ) {
 			$titles = array();
 		} elseif ( isset( $titles[ $site_id ] ) ) {
@@ -120,7 +101,7 @@ class Mlp_Admin_Bar_Customizer {
 		$title = $settings[ $site_id ]['text'];
 
 		$titles[ $site_id ] = $title;
-		wp_cache_set( $this->cache_key, $titles, $this->cache_group );
+		$this->cache->set( $titles );
 
 		return $title;
 	}

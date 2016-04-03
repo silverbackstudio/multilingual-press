@@ -10,9 +10,9 @@
 class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 
 	/**
-	 * @var string
+	 * @var Mlp_Cache
 	 */
-	private $cache_group = 'mlp';
+	private $cache;
 
 	/**
 	 * @var string
@@ -35,16 +35,22 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 	 * @param wpdb                         $wpdb           Database object.
 	 * @param Mlp_Site_Relations_Interface $site_relations Site relations object.
 	 * @param Mlp_Db_Table_Name_Interface  $link_table     Link table object.
+	 * @param Mlp_Cache                    $cache          Cache object.
 	 */
 	public function __construct(
 		wpdb $wpdb,
 		Mlp_Site_Relations_Interface $site_relations,
-		$link_table
+		$link_table,
+		Mlp_Cache $cache
 	) {
 
 		$this->wpdb = $wpdb;
+
 		$this->site_relations = $site_relations;
+
 		$this->link_table = $link_table->get_name();
+
+		$this->cache = $cache;
 	}
 
 	/**
@@ -98,8 +104,11 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 			$type
 		);
 
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
-		wp_cache_delete( $cache_key, $this->cache_group );
+		$this->cache->delete( array(
+			$source_site_id,
+			$source_content_id,
+			$type,
+		) );
 
 		do_action(
 			'mlp_debug',
@@ -109,20 +118,6 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 		);
 
 		return $result;
-	}
-
-	/**
-	 * Return the cache key for the given arguments.
-	 *
-	 * @param int    $source_site_id    Blog ID.
-	 * @param int    $source_content_id Content ID.
-	 * @param string $type              Content type.
-	 *
-	 * @return string
-	 */
-	private function get_cache_key( $source_site_id, $source_content_id, $type ) {
-
-		return "mlp_{$type}_relations_{$source_site_id}_{$source_content_id}";
 	}
 
 	/**
@@ -136,14 +131,16 @@ class Mlp_Content_Relations implements Mlp_Content_Relations_Interface {
 	 */
 	public function get_relations( $source_site_id, $source_content_id, $type = 'post' ) {
 
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
-
-		$cache = wp_cache_get( $cache_key, $this->cache_group );
-		if ( is_array( $cache ) ) {
-			return $cache;
+		$relations = $this->cache->get( array(
+			$source_site_id,
+			$source_content_id,
+			$type,
+		) );
+		if ( is_array( $relations ) ) {
+			return $relations;
 		}
 
-		$sql = "
+		$query = "
 SELECT t.ml_blogid as site_id, t.ml_elementid as content_id
 FROM {$this->link_table} s
 INNER JOIN {$this->link_table} t
@@ -153,21 +150,24 @@ ON s.ml_source_blogid = t.ml_source_blogid
 WHERE s.ml_blogid = %d
 	AND s.ml_elementid = %d
 	AND s.ml_type = %s";
+		$query = $this->wpdb->prepare( $query, $source_site_id, $source_content_id, $type );
 
-		$query = $this->wpdb->prepare( $sql, $source_site_id, $source_content_id, $type );
-
-		$results = $this->wpdb->get_results( $query, ARRAY_A );
-		if ( ! $results ) {
+		$relations = $this->wpdb->get_results( $query, ARRAY_A );
+		if ( ! $relations ) {
 			return array();
 		}
 
 		$output = array();
 
-		foreach ( $results as $set ) {
-			$output[ (int) $set[ 'site_id' ] ] = (int) $set[ 'content_id' ];
+		foreach ( $relations as $relation ) {
+			$output[ (int) $relation['site_id'] ] = (int) $relation['content_id'];
 		}
 
-		wp_cache_set( $cache_key, $output, $this->cache_group );
+		$this->cache->set( $output, array(
+			$source_site_id,
+			$source_content_id,
+			$type,
+		) );
 
 		return $output;
 	}
@@ -214,8 +214,11 @@ WHERE s.ml_blogid = %d
 
 		$result = (int) $this->wpdb->delete( $this->link_table, $where, $where_format );
 
-		$cache_key = $this->get_cache_key( $source_site_id, $source_content_id, $type );
-		wp_cache_delete( $cache_key, $this->cache_group );
+		$this->cache->delete( array(
+			$source_site_id,
+			$source_content_id,
+			$type,
+		) );
 
 		do_action(
 			'mlp_debug',

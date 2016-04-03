@@ -11,14 +11,34 @@
 class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 
 	/**
-	 * @var Mlp_Language_Db_Access
+	 * @var Mlp_Cache
 	 */
-	private $language_db;
+	private $cache;
+
+	/**
+	 * @var Mlp_Content_Relations_Interface
+	 */
+	private $content_relations;
 
 	/**
 	 * @var Inpsyde_Property_List_Interface
 	 */
 	private $data;
+
+	/**
+	 * @var array
+	 */
+	private $language_data_from_db = array();
+
+	/**
+	 * @var Mlp_Language_Db_Access
+	 */
+	private $language_db;
+
+	/**
+	 *@var Mlp_Site_Relations_Interface
+	 */
+	private $site_relations;
 
 	/**
 	 * Table name including base prefix.
@@ -28,48 +48,44 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	private $table_name;
 
 	/**
-	 *@var Mlp_Site_Relations_Interface
-	 */
-	private $site_relations;
-
-	/**
 	 * @var wpdb
 	 */
 	private $wpdb;
 
 	/**
-	 * @var Mlp_Content_Relations_Interface
-	 */
-	private $content_relations;
-
-	/**
-	 * @var array
-	 */
-	private $language_data_from_db = array();
-
-	/**
 	 * Constructor.
 	 *
 	 * @wp-hook plugins_loaded
-	 * @param   Inpsyde_Property_List_Interface $data
-	 * @param   string                          $table_name
-	 * @param   Mlp_Site_Relations_Interface    $site_relations
-	 * @param   Mlp_Content_Relations_Interface $content_relations
-	 * @param   wpdb                            $wpdb
+	 *
+	 * @param Inpsyde_Property_List_Interface $data
+	 * @param string                          $table_name
+	 * @param Mlp_Site_Relations_Interface    $site_relations
+	 * @param Mlp_Content_Relations_Interface $content_relations
+	 * @param wpdb                            $wpdb
+	 * @param Mlp_Cache                       $cache
 	 */
 	public function __construct(
 		Inpsyde_Property_List_Interface $data,
 		$table_name,
-		Mlp_Site_Relations_Interface    $site_relations,
+		Mlp_Site_Relations_Interface $site_relations,
 		Mlp_Content_Relations_Interface $content_relations,
-		wpdb                            $wpdb
+		wpdb $wpdb,
+		Mlp_Cache $cache
 	) {
-		$this->data              = $data;
-		$this->wpdb              = $wpdb;
-		$this->language_db       = new Mlp_Language_Db_Access( $table_name );
-		$this->table_name        = $this->wpdb->base_prefix . $table_name;
-		$this->site_relations    = $site_relations;
+
+		$this->data = $data;
+
+		$this->wpdb = $wpdb;
+
+		$this->language_db = new Mlp_Language_Db_Access( $table_name );
+
+		$this->table_name = $this->wpdb->base_prefix . $table_name;
+
+		$this->site_relations = $site_relations;
+
 		$this->content_relations = $content_relations;
+
+		$this->cache = $cache;
 
 		add_action( 'wp_loaded', array ( $this, 'load_language_manager' ) );
 		add_filter( 'mlp_language_api', array ( $this, 'get_instance' ) );
@@ -202,11 +218,11 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		/** @type WP_Rewrite $wp_rewrite */
 		global $wp_rewrite;
 
-		$arguments         = $this->prepare_translation_arguments( $args );
-		$key               = md5( serialize( $arguments ) );
-		$content_relations = array();
-		$cached            = wp_cache_get( $key, 'mlp' );
+		$arguments = $this->prepare_translation_arguments( $args );
 
+		$content_relations = array();
+
+		$cached = $this->cache->get( $arguments );
 		if ( is_array( $cached ) )
 			return $cached;
 
@@ -261,8 +277,14 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 
 				if ( 'term' === $arguments[ 'type' ] ) {
 
-					$term_translation = new Mlp_Term_Translation( $this->wpdb, $wp_rewrite );
-					$translation      = $term_translation->get_translation( $content_id, $site_id );
+					$term_translation = new Mlp_Term_Translation(
+						$this->wpdb,
+						$wp_rewrite,
+						new Mlp_Cache( 'term_translations' ),
+						new Mlp_Cache( 'get_term_by_ttid' )
+					);
+
+					$translation = $term_translation->get_translation( $content_id, $site_id );
 
 					if ( ! $translation )
 						$valid = FALSE;
@@ -351,7 +373,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		 * @param array $arguments    Translation arguments.
 		 */
 		$translations = apply_filters( 'mlp_translations', $translations, $arguments );
-		wp_cache_set( $key, $translations, 'mlp' );
+		$this->cache->set( $translations, $arguments );
 
 		return $translations;
 	}
