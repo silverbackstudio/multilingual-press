@@ -18,10 +18,12 @@ class Mlp_Cache_Actor {
 	/**
 	 * Constructor. Sets up the properties.
 	 *
+	 * @todo With MultilingualPress 3.0.0, add callable type hint.
+	 *
 	 * @param Mlp_Cache $cache    Cache object.
 	 * @param callable  $callback The callback.
 	 */
-	public function __construct( Mlp_Cache $cache, callable $callback ) {
+	public function __construct( Mlp_Cache $cache, $callback ) {
 
 		$this->cache = $cache;
 
