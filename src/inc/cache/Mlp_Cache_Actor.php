@@ -31,12 +31,13 @@ class Mlp_Cache_Actor {
 	}
 
 	/**
-	 * Executes the injected callback, and passes the injected cache object as argument.
+	 * Executes the injected callback, and passes the injected cache object as well as the original arguments passed to
+	 * this method as arguments to the callback.
 	 *
 	 * @return mixed
 	 */
 	public function act() {
 
-		return call_user_func( array( $this, 'callback' ), $this->cache );
+		return call_user_func( array( $this, 'callback' ), $this->cache, func_get_args() );
 	}
 }
