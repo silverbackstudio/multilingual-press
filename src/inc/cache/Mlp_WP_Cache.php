@@ -1,9 +1,19 @@
 <?php # -*- coding: utf-8 -*-
 
 /**
- * Interface for all cachie implementations.
+ * Bridge to core WordPress's caching functions.
  */
-interface Mlp_Cache {
+class Mlp_WP_Cache implements Mlp_Cache {
+
+	/**
+	 * @var string
+	 */
+	private $group;
+
+	/**
+	 * @var string
+	 */
+	private $key;
 
 	/**
 	 * Constructor. Sets up the properties.
@@ -11,7 +21,12 @@ interface Mlp_Cache {
 	 * @param string $key   The cache key (base).
 	 * @param string $group Optional. The cache group. Defaults to 'mlp'.
 	 */
-	public function __construct( $key, $group = 'mlp' );
+	public function __construct( $key, $group = 'mlp' ) {
+
+		$this->key = (string) $key;
+
+		$this->group = (string) $group;
+	}
 
 	/**
 	 * Adds the given data to the cache unless it is set already, using the key generated from the key base and the
@@ -23,7 +38,10 @@ interface Mlp_Cache {
 	 *
 	 * @return bool
 	 */
-	public function add( $data, $key_fragments = array(), $expire = 0 );
+	public function add( $data, $key_fragments = array(), $expire = 0 ) {
+
+		return wp_cache_add( $this->get_key( (array) $key_fragments ), $data, $this->group, (int) $expire );
+	}
 
 	/**
 	 * Removes the data from the cache, using the key generated from the key base and the given key fragment(s).
@@ -32,7 +50,10 @@ interface Mlp_Cache {
 	 *
 	 * @return bool
 	 */
-	public function delete( $key_fragments = array() );
+	public function delete( $key_fragments = array() ) {
+
+		return wp_cache_delete( $this->get_key( (array) $key_fragments ), $this->group );
+	}
 
 	/**
 	 * Removes the data from the cache, using the given key.
@@ -41,7 +62,10 @@ interface Mlp_Cache {
 	 *
 	 * @return bool
 	 */
-	public function delete_for_key( $key );
+	public function delete_for_key( $key ) {
+
+		return wp_cache_delete( (string) $key, $this->group );
+	}
 
 	/**
 	 * Returns the data from the cache, using the key generated from the key base and the given key fragment(s).
@@ -51,7 +75,57 @@ interface Mlp_Cache {
 	 *
 	 * @return mixed|bool
 	 */
-	public function get( $key_fragments = array(), $force = false );
+	public function get( $key_fragments = array(), $force = false ) {
+
+		return wp_cache_get( $this->get_key( (array) $key_fragments ), $this->group, (bool) $force );
+	}
+
+	/**
+	 * Returns the cache key for the given key fragment(s).
+	 *
+	 * @param array $key_fragments Optional. Fragments to generate the cache key from. Defaults to array().
+	 *
+	 * @return string
+	 */
+	public function get_key( array $key_fragments = array() ) {
+
+		if ( ! $key_fragments ) {
+			return $this->key;
+		}
+
+		// TODO: With MultilingualPress 3.0.0, turn stringify() into a closure.
+		$key_fragments = array_map( array( $this, 'stringify' ), $key_fragments );
+
+		return $this->key . '|' . implode( '|', $key_fragments );
+	}
+
+	/**
+	 * Returns the (hash) string representation for the passed data.
+	 *
+	 * @param mixed $data Data.
+	 *
+	 * @return string
+	 */
+	public function stringify( $data ) {
+
+		if ( null === $data ) {
+			return 'NULL';
+		}
+
+		if ( is_scalar( $data ) ) {
+			return (string) $data;
+		}
+
+		if ( is_array( $data ) || is_object( $data ) ) {
+			if ( $data instanceof Closure ) {
+				$data = create_function( '$c', 'return $c();' );
+			}
+
+			return md5( serialize( $data ) );
+		}
+
+		return '';
+	}
 
 	/**
 	 * Registers the execution of the given callback for the given action hook(s).
@@ -63,7 +137,14 @@ interface Mlp_Cache {
 	 *
 	 * @return void
 	 */
-	public function register_callback_for_action( $callback, $actions );
+	public function register_callback_for_action( $callback, $actions ) {
+
+		$actor = Mlp_Cache_Actor_Factory::create( $this, $callback );
+
+		foreach ( (array) $actions as $action ) {
+			add_action( (string) $action, array( $actor, 'act' ) );
+		}
+	}
 
 	/**
 	 * Registers the deletion of the cached data for the given action hook(s), using the key generated from the key base
@@ -74,7 +155,14 @@ interface Mlp_Cache {
 	 *
 	 * @return void
 	 */
-	public function register_deletion_action( $actions, $key_fragments = array() );
+	public function register_deletion_action( $actions, $key_fragments = array() ) {
+
+		$deletor = Mlp_Cache_Deletor_Factory::create( $this, $this->get_key( (array) $key_fragments ) );
+
+		foreach ( (array) $actions as $action ) {
+			add_action( (string) $action, array( $deletor, 'delete' ) );
+		}
+	}
 
 	/**
 	 * Replaces the original data in the cache with the given data, using the key generated from the key base and the
@@ -86,7 +174,10 @@ interface Mlp_Cache {
 	 *
 	 * @return bool
 	 */
-	public function replace( $data, $key_fragments = array(), $expire = 0 );
+	public function replace( $data, $key_fragments = array(), $expire = 0 ) {
+
+		return wp_cache_replace( $this->get_key( (array) $key_fragments ), $data, $this->group, (int) $expire );
+	}
 
 	/**
 	 * Saves the given data to the cache, using the key generated from the key base and the given key fragment(s).
@@ -97,7 +188,10 @@ interface Mlp_Cache {
 	 *
 	 * @return bool
 	 */
-	public function set( $data, $key_fragments = array(), $expire = 0 );
+	public function set( $data, $key_fragments = array(), $expire = 0 ) {
+
+		return wp_cache_set( $this->get_key( (array) $key_fragments ), $data, $this->group, (int) $expire );
+	}
 
 	/**
 	 * Switches to the specific cache for the site with the given ID.
@@ -106,5 +200,8 @@ interface Mlp_Cache {
 	 *
 	 * @return void
 	 */
-	public function switch_to_site( $site_id );
+	public function switch_to_site( $site_id ) {
+
+		wp_cache_switch_to_blog( (int) $site_id );
+	}
 }
