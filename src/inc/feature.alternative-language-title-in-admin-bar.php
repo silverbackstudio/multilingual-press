@@ -44,7 +44,7 @@ function mlp_update_language_titles_cache( Mlp_Cache $cache, array $args ) {
 
 	// Check the option value.
 	if ( empty( $args[1] ) ) {
-		return $cache->set( null );
+		return $cache->flush();
 	}
 
 	$titles = array();
