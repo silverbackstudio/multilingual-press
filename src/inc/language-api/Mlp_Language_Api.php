@@ -280,8 +280,8 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 					$term_translation = new Mlp_Term_Translation(
 						$this->wpdb,
 						$wp_rewrite,
-						new Mlp_Cache( 'term_translations' ),
-						new Mlp_Cache( 'get_term_by_ttid' )
+						new Mlp_WP_Cache( 'term_translations' ),
+						new Mlp_WP_Cache( 'get_term_by_ttid' )
 					);
 
 					$translation = $term_translation->get_translation( $content_id, $site_id );
