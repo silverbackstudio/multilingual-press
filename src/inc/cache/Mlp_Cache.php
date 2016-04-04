@@ -93,27 +93,38 @@ class Mlp_Cache {
 			return $this->key;
 		}
 
-		// TODO: With MultilingualPress 3.0.0, turn maybe_hashify() into a closure.
-		$key_fragments = array_map( array( $this, 'maybe_hashify' ), $key_fragments );
+		// TODO: With MultilingualPress 3.0.0, turn stringify() into a closure.
+		$key_fragments = array_map( array( $this, 'stringify' ), $key_fragments );
 
 		return $this->key . '|' . implode( '|', $key_fragments );
 	}
 
 	/**
-	 * Returns a hash string for arrays and objects, and the string representation of the passed data otherwise.
+	 * Returns the (hash) string representation for the passed data.
 	 *
 	 * @param mixed $data Data.
 	 *
 	 * @return string
 	 */
-	public function maybe_hashify( $data ) {
+	public function stringify( $data ) {
 
-		// TODO: Take care of Closures and Resources.
-		if ( is_array( $data ) || is_object( $data ) ) {
-			$data = md5( serialize( $data ) );
+		if ( null === $data ) {
+			return 'NULL';
 		}
 
-		return (string) $data;
+		if ( is_scalar( $data ) ) {
+			return (string) $data;
+		}
+
+		if ( is_array( $data ) || is_object( $data ) ) {
+			if ( $data instanceof Closure ) {
+				$data = create_function( '$c', 'return $c();' );
+			}
+
+			return md5( serialize( $data ) );
+		}
+
+		return '';
 	}
 
 	/**
