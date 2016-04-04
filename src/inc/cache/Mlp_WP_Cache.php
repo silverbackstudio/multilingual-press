@@ -68,6 +68,16 @@ class Mlp_WP_Cache implements Mlp_Cache {
 	}
 
 	/**
+	 * Removes all data from the cache.
+	 *
+	 * @return bool
+	 */
+	public function flush(){
+
+		return wp_cache_flush();
+	}
+
+	/**
 	 * Returns the data from the cache, using the key generated from the key base and the given key fragment(s).
 	 *
 	 * @param mixed $key_fragments Optional. Fragment(s) to generate the cache key from. Defaults to array().
