@@ -16,4 +16,4 @@ defined( 'ABSPATH' ) or die();
 
 define( 'MLP_PLUGIN_FILE', __FILE__ );
 
-require dirname( __FILE__ ) . '/src/multilingual-press.php';
+require __DIR__ . '/src/multilingual-press.php';
