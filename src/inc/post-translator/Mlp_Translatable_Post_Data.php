@@ -23,17 +23,17 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	/**
 	 * @var array
 	 */
-	private $parent_elements = array();
+	private $parent_elements = [];
 
 	/**
 	 * @var array
 	 */
-	private $post_request_data = array();
+	private $post_request_data = [];
 
 	/**
 	 * @var array
 	 */
-	public $save_context = array();
+	public $save_context = [];
 
 	/**
 	 * @var int
@@ -137,7 +137,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		}
 
 		$file     = $path = '';
-		$fileinfo = array();
+		$fileinfo = [];
 
 		// Check for thumbnail
 		if ( current_theme_supports( 'post-thumbnails' ) ) {
@@ -309,7 +309,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	 *
 	 * @return void
 	 */
-	public function update_remote_post_meta( $remote_post_id, $post_meta = array() ) {
+	public function update_remote_post_meta( $remote_post_id, $post_meta = [] ) {
 
 		/**
 		 * Filter post meta data before saving.
@@ -347,7 +347,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		 * @param array $post_meta    Post meta fields.
 		 * @param array $save_context Context of the to-be-saved post.
 		 */
-		$post_meta = apply_filters( 'mlp_pre_save_post_meta', array(), $this->save_context );
+		$post_meta = apply_filters( 'mlp_pre_save_post_meta', [], $this->save_context );
 
 		return $post_meta;
 	}
@@ -435,7 +435,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	 *
 	 * @return void
 	 */
-	public function set_save_context( array $save_context = array() ) {
+	public function set_save_context( array $save_context = [] ) {
 
 		$this->save_context = $save_context;
 	}

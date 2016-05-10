@@ -12,7 +12,7 @@ class Mlp_Search_Form_View {
 	 * @param array $attributes
 	 * @return string
 	 */
-	public function get_search_field( Array $attributes = array() ) {
+	public function get_search_field( Array $attributes = [] ) {
 
 		$default = array (
 			'type'  => 'search',

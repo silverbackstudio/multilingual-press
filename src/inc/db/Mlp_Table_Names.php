@@ -75,7 +75,7 @@ class Mlp_Table_Names implements Mlp_Table_Names_Interface {
 
 		$cache_key = "site-all-{$this->site_id}";
 		$cache     = wp_cache_get( $cache_key, $this->cache_group );
-		$exclude   = array();
+		$exclude   = [];
 
 		if ( $cache )
 			return $cache;
@@ -163,7 +163,7 @@ class Mlp_Table_Names implements Mlp_Table_Names_Interface {
 	 * @param array $exclude
 	 * @return array
 	 */
-	private function query_information_schema( Array $exclude = array() ) {
+	private function query_information_schema( Array $exclude = [] ) {
 
 		$sql = $this->get_information_schema_sql( $exclude );
 
@@ -180,13 +180,13 @@ class Mlp_Table_Names implements Mlp_Table_Names_Interface {
 	 */
 	private function extract_names_from_schema( $schema, $prefix = '' ) {
 
-		$matches = array();
+		$matches = [];
 		$pattern = '~CREATE TABLE '. $prefix . '(.*) \(~';
 
 		preg_match_all( $pattern, $schema, $matches );
 
 		if ( empty ( $matches[ 1 ] ) )
-			return array();
+			return [];
 
 		return $matches[ 1 ];
 	}
@@ -221,7 +221,7 @@ class Mlp_Table_Names implements Mlp_Table_Names_Interface {
 	 * @param array $exclude
 	 * @return string
 	 */
-	private function get_information_schema_sql( Array $exclude = array() ) {
+	private function get_information_schema_sql( Array $exclude = [] ) {
 		$sql = "
 			SELECT TABLE_NAME
 			FROM information_schema.tables

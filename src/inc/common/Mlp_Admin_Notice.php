@@ -18,7 +18,7 @@ class Mlp_Admin_Notice {
 	/**
 	 * @var array
 	 */
-	private $attrs = array();
+	private $attrs = [];
 
 	/**
 	 * Constructor
@@ -26,7 +26,7 @@ class Mlp_Admin_Notice {
 	 * @param string $msg
 	 * @param array $attrs HTML attributes. 'class' should be 'error' or 'updated'.
 	 */
-	public function __construct( $msg, $attrs = array() ) {
+	public function __construct( $msg, $attrs = [] ) {
 
 		$this->msg   = $msg;
 

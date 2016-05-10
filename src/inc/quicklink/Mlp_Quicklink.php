@@ -28,7 +28,7 @@ class Mlp_Quicklink implements Mlp_Updatable {
 	/**
 	 * @var Mlp_Translation[]
 	 */
-	private $translations = array();
+	private $translations = [];
 
 	/**
 	 * Constructor. Sets up the properties.
@@ -225,7 +225,7 @@ ORDER BY domain DESC";
 
 		$current_blog_id = get_current_blog_id();
 
-		$translated = array();
+		$translated = [];
 
 		foreach ( $translations as $site => $translation ) {
 			if ( $current_blog_id === $site ) {
@@ -259,7 +259,7 @@ ORDER BY domain DESC";
 	private function get_translations() {
 
 		if ( ! is_singular() ) {
-			return array();
+			return [];
 		}
 
 		if ( $this->translations ) {
@@ -293,7 +293,7 @@ ORDER BY domain DESC";
 			$container = 'form';
 		}
 
-		$elements = array();
+		$elements = [];
 
 		foreach ( $translated as $url => $language ) {
 			if ( 'links' === $type ) {

@@ -96,11 +96,11 @@ class Mlp_Term_Translation_Controller implements Mlp_Updatable {
 	private function get_post_data() {
 
 		if ( 'POST' !== $_SERVER[ 'REQUEST_METHOD' ] ) {
-			return array();
+			return [];
 		}
 
 		if ( empty( $_POST[ 'mlp' ][ 'term_translation' ] ) ) {
-			return array();
+			return [];
 		}
 
 		return (array) $_POST[ 'mlp' ][ 'term_translation' ];
@@ -166,7 +166,7 @@ class Mlp_Term_Translation_Controller implements Mlp_Updatable {
 		/** This filter is documented in inc/post-translator/Mlp_Translation_Metabox.php */
 		$post_types = (array) apply_filters( 'mlp_allowed_post_types', array( 'post', 'page' ) );
 		if ( empty( $post_types ) ) {
-			return array();
+			return [];
 		}
 
 		return get_object_taxonomies( $post_types );

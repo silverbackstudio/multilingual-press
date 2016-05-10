@@ -108,7 +108,7 @@ class Mlp_Language_Updater {
 			'page' => $page
 		);
 		$before = $this->db->get_items( $params );
-		$return = array();
+		$return = [];
 
 		foreach ( $before as $id => $data )
 			$return[ $id ] = (array) $data;

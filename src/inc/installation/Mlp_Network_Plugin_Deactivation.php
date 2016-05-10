@@ -28,7 +28,7 @@ class Mlp_Network_Plugin_Deactivation implements Mlp_Network_Plugin_Deactivation
 	 */
 	public function deactivate( Array $plugins ) {
 
-		$active_plugins = get_site_option( $this->option_name, array() );
+		$active_plugins = get_site_option( $this->option_name, [] );
 		$files          = array_keys( $active_plugins );
 		$remove         = $this->get_plugins_to_deactivate( $files, $plugins );
 
@@ -50,7 +50,7 @@ class Mlp_Network_Plugin_Deactivation implements Mlp_Network_Plugin_Deactivation
 	 */
 	private function get_plugins_to_deactivate( Array $files, Array $plugins ) {
 
-		$return = array();
+		$return = [];
 
 		foreach ( $files as $file ) {
 

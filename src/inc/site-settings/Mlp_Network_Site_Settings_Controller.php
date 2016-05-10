@@ -111,7 +111,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 */
 	private function update_language( $blog_id ) {
 
-		$languages = (array) get_site_option( 'inpsyde_multilingual', array() );
+		$languages = (array) get_site_option( 'inpsyde_multilingual', [] );
 
 		if ( empty ( $languages[ $blog_id ] ) )
 			$languages[ $blog_id ] = array ();
@@ -224,7 +224,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	private function get_new_related_blogs() {
 
 		if ( ! isset ( $_POST[ 'related_blogs' ] ) )
-			return array();
+			return [];
 
 		$new_related = (array) $_POST[ 'related_blogs' ];
 		return array_map( 'intval', $new_related );

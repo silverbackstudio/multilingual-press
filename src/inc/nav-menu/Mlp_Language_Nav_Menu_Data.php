@@ -122,7 +122,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	public function get_ajax_menu_items() {
 
 		if ( ! $this->is_allowed() ) {
-			return array();
+			return [];
 		}
 
 		$titles = mlp_get_available_languages_titles( true );
@@ -155,7 +155,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 */
 	private function prepare_menu_items( array $titles ) {
 
-		$menu_items = array();
+		$menu_items = [];
 
 		foreach ( array_values( $_GET['mlp_sites'] ) as $blog_id ) {
 			if ( ! $this->is_valid_blog_id( $titles, $blog_id ) ) {

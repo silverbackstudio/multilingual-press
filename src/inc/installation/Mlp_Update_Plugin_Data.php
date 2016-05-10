@@ -126,7 +126,7 @@ class Mlp_Update_Plugin_Data {
 
 		foreach ( $this->all_sites as $site ) {
 
-			$linked = get_blog_option( $site[ 'blog_id' ], $option_name, array() );
+			$linked = get_blog_option( $site[ 'blog_id' ], $option_name, [] );
 
 			if ( ! empty( $linked ) ) {
 				$inserted += $relations->set_relation( $site[ 'blog_id' ], $linked );

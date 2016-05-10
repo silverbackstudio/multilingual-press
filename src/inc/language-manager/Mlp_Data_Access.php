@@ -33,7 +33,7 @@ interface Mlp_Data_Access {
 	 * @param   String $type
 	 * @return  Array $results
 	 */
-	public function get_items( array $params = array(), $type = OBJECT_K );
+	public function get_items( array $params = [], $type = OBJECT_K );
 
 	/**
 	 * @param array  $items

@@ -170,7 +170,7 @@ class Mlp_Cpt_Translator implements Mlp_Updatable {
 		$post_types = $this->get_custom_post_types();
 
 		if ( empty ( $post_types ) or empty ( $_POST[ $this->form_name ] ) ) {
-			$options[ 'post_types' ] = array();
+			$options[ 'post_types' ] = [];
 			return update_site_option( 'inpsyde_multilingual_cpt', $options );
 		}
 

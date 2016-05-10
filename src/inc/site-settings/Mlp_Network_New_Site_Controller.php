@@ -79,7 +79,7 @@ class Mlp_Network_New_Site_Controller {
 		if ( ! $posted )
 			return;
 
-		$languages = (array) get_site_option( 'inpsyde_multilingual', array() );
+		$languages = (array) get_site_option( 'inpsyde_multilingual', [] );
 
 		if ( empty ( $languages[ $blog_id ] ) )
 			$languages[ $blog_id ] = array ();

@@ -282,7 +282,7 @@ class Multilingual_Press {
 		$site_relations->delete_relation( $blog_id );
 
 		// Update site option
-		$blogs = (array) get_site_option( 'inpsyde_multilingual', array() );
+		$blogs = (array) get_site_option( 'inpsyde_multilingual', [] );
 		if ( isset( $blogs[ $blog_id ] ) ) {
 			unset( $blogs[ $blog_id ] );
 			update_site_option( 'inpsyde_multilingual', $blogs );

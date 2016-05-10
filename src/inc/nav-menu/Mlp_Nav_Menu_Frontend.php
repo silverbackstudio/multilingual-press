@@ -18,7 +18,7 @@ class Mlp_Nav_Menu_Frontend {
 	/**
 	 * @var int[]
 	 */
-	private $site_ids = array();
+	private $site_ids = [];
 
 	/**
 	 * Constructor.

@@ -22,7 +22,7 @@ class Mlp_Language implements Mlp_Language_Interface {
 	/**
 	 * @var array
 	 */
-	private $names = array();
+	private $names = [];
 
 	/**
 	 * Constructor. Set up the properies.

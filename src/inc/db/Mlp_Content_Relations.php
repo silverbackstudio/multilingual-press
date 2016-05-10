@@ -158,10 +158,10 @@ WHERE s.ml_blogid = %d
 
 		$results = $this->wpdb->get_results( $query, ARRAY_A );
 		if ( ! $results ) {
-			return array();
+			return [];
 		}
 
-		$output = array();
+		$output = [];
 
 		foreach ( $results as $set ) {
 			$output[ (int) $set[ 'site_id' ] ] = (int) $set[ 'content_id' ];
@@ -419,7 +419,7 @@ WHERE (
 
 		$result = $this->wpdb->get_results( $query, ARRAY_A );
 		if ( ! $result ) {
-			return array();
+			return [];
 		}
 
 		foreach ( $result as $key => $data ) {

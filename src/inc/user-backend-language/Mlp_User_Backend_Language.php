@@ -180,14 +180,14 @@ class Mlp_User_Backend_Language {
 	/**
 	 * Show language selector.
 	 *
-	 * @param array  $lang_files Optional. Language file names. Defaults to array().
+	 * @param array  $lang_files Optional. Language file names. Defaults to [].
 	 * @param string $current    Optional. Current language code. Defaults to ''.
 	 *
 	 * @return void
 	 */
-	private function dropdown_languages( array $lang_files = array(), $current = '' ) {
+	private function dropdown_languages( array $lang_files = [], $current = '' ) {
 
-		$output = array();
+		$output = [];
 
 		// Inherit site specific language
 		$output[ ] = '<option value=""' . selected( $current, '', FALSE ) . '>'

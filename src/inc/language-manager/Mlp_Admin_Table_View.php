@@ -127,7 +127,7 @@ class Mlp_Admin_Table_View {
 					<?php
 					$content = empty( $row->$col ) ? '' : $row->$col;
 
-					$attrs = empty( $data['attributes'] ) ? array() : $data['attributes'];
+					$attrs = empty( $data['attributes'] ) ? [] : $data['attributes'];
 
 					if ( empty( $data['type'] ) ) {
 						$data['type'] = 'text';
@@ -163,7 +163,7 @@ class Mlp_Admin_Table_View {
 	 * @param array $attributes
 	 * @return string
 	 */
-	private function get_checkbox_input( $id, $col, $value, Array $attributes = array() ) {
+	private function get_checkbox_input( $id, $col, $value, Array $attributes = [] ) {
 
 		list( $name, $attrs ) = $this->prepare_input_data( $id, $col, $value, $attributes );
 
@@ -182,7 +182,7 @@ class Mlp_Admin_Table_View {
 	 * @param array $attributes
 	 * @return string
 	 */
-	private function get_number_input( $id, $col, $value, Array $attributes = array() ) {
+	private function get_number_input( $id, $col, $value, Array $attributes = [] ) {
 
 		list( $name, $attrs, $value ) = $this->prepare_input_data( $id, $col, $value, $attributes );
 
@@ -201,7 +201,7 @@ class Mlp_Admin_Table_View {
 	 * @param array $attributes
 	 * @return string
 	 */
-	private function get_text_input( $id, $col, $value, Array $attributes = array() ) {
+	private function get_text_input( $id, $col, $value, Array $attributes = [] ) {
 
 		list( $name, $attrs, $value ) = $this->prepare_input_data( $id, $col, $value, $attributes );
 

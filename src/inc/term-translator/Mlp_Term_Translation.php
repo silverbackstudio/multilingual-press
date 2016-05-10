@@ -223,7 +223,7 @@ LIMIT 1";
 
 		$term = $this->wpdb->get_row( $query, ARRAY_A );
 		if ( ! $term ) {
-			$term = array();
+			$term = [];
 		}
 
 		wp_cache_set( $cache_key, $term, 'mlp' );

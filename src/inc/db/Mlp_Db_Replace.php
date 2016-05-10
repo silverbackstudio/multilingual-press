@@ -17,7 +17,7 @@ class Mlp_Db_Replace {
 	 *
 	 * @type array
 	 */
-	private $invalid_columns = array();
+	private $invalid_columns = [];
 
 	/**
 	 * Constructor

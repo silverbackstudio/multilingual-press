@@ -361,7 +361,7 @@ LIMIT 2";
 	 */
 	private function deactivate_plugins() {
 
-		update_option( 'active_plugins', array() );
+		update_option( 'active_plugins', [] );
 	}
 
 	/**

@@ -82,14 +82,14 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 	 *
 	 * @return array
 	 */
-	public function get_items( array $params = array(), $type = OBJECT_K ) {
+	public function get_items( array $params = [], $type = OBJECT_K ) {
 
 		global $wpdb;
 
 		$default_params = array(
 			'page'     => 1,
-			'fields'   => array(),
-			'where'    => array(),
+			'fields'   => [],
+			'where'    => [],
 			'order_by' => array(
 				array(
 					'field' => 'priority',
@@ -190,7 +190,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 
 		$result = $wpdb->get_results( $query, $type );
 
-		return null === $result ? array() : $result;
+		return null === $result ? [] : $result;
 	}
 
 	/**
@@ -203,7 +203,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 
 		global $wpdb;
 
-		$queries = array();
+		$queries = [];
 
 		foreach ( $items as $id => $values ) {
 			$wpdb->update(

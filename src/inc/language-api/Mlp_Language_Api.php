@@ -45,7 +45,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	/**
 	 * @var array
 	 */
-	private $language_data_from_db = array();
+	private $language_data_from_db = [];
 
 	/**
 	 * Constructor.
@@ -116,7 +116,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	 */
 	public function get_site_languages( $base_site = 0 ) {
 
-		$related_blogs = $options = array();
+		$related_blogs = $options = [];
 		$languages     = get_site_option( 'inpsyde_multilingual' );
 
 		if ( 0 !== $base_site ) {
@@ -124,7 +124,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			$related_blogs = $this->get_related_sites( $base_site, TRUE );
 
 			if ( empty ( $related_blogs ) )
-				return array();
+				return [];
 		}
 
 		if ( ! is_array( $languages ) )
@@ -197,14 +197,14 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	 * }
 	 * @return array Array of Mlp_Translation instances, site IDs are the keys
 	 */
-	public function get_translations( Array $args = array() ) {
+	public function get_translations( Array $args = [] ) {
 
 		/** @type WP_Rewrite $wp_rewrite */
 		global $wp_rewrite;
 
 		$arguments         = $this->prepare_translation_arguments( $args );
 		$key               = md5( serialize( $arguments ) );
-		$content_relations = array();
+		$content_relations = [];
 		$cached            = wp_cache_get( $key, 'mlp' );
 
 		if ( is_array( $cached ) )
@@ -231,7 +231,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 				return array ();
 		}
 
-		$translations      = array();
+		$translations      = [];
 		$languages         = $this->get_all_language_data();
 
 		foreach ( $sites as $site_id ) {
@@ -464,10 +464,10 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		if ( ! empty ( $this->language_data_from_db ) )
 			return $this->language_data_from_db;
 
-		$languages = (array) get_site_option( 'inpsyde_multilingual', array() );
+		$languages = (array) get_site_option( 'inpsyde_multilingual', [] );
 
 		if ( empty ( $languages ) )
-			return array();
+			return [];
 
 		$tags     = array ();
 		$add_like = array ();
@@ -629,7 +629,7 @@ WHERE `http_name` IN( $values )";
 		$sites = $this->site_relations->get_related_sites( $site_id );
 
 		if ( empty ( $sites ) )
-			return array();
+			return [];
 
 		if ( $include_base )
 			$sites[] = $site_id;
@@ -710,7 +710,7 @@ WHERE `http_name` IN( $values )";
 	private function prepare_translation_relations( Array $arguments ) {
 
 		if ( ! $this->can_have_relations( $arguments ) )
-			return array();
+			return [];
 
 		$relations = $this->get_related_content_ids(
 			$arguments[ 'site_id' ],

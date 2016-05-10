@@ -57,7 +57,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 		wp_cache_set( 'table_names', $names, $this->cache_group );
 
 		if ( array ( $this->no_tables_found ) === $names )
-			return array();
+			return [];
 
 		return $names;
 	}
@@ -193,13 +193,13 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 	 */
 	private function extract_names_from_schema( $schema, $prefix = '' ) {
 
-		$matches = array();
+		$matches = [];
 		$pattern = '~CREATE TABLE (' . $prefix . '.*) \(~';
 
 		preg_match_all( $pattern, $schema, $matches );
 
 		if ( empty ( $matches[ 1 ] ) )
-			return array();
+			return [];
 
 		return $matches[ 1 ];
 	}

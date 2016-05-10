@@ -34,7 +34,7 @@ class Mlp_Accept_Header_Parser implements Mlp_Accept_Header_Parser_Interface {
 		$accept_header = $this->remove_comment( $accept_header );
 
 		if ( '' === $accept_header )
-			return array();
+			return [];
 
 		$out   = array ();
 		$parts = $this->separate_values( $accept_header );
@@ -63,7 +63,7 @@ class Mlp_Accept_Header_Parser implements Mlp_Accept_Header_Parser_Interface {
 		if ( FALSE === strpos( $part, ';' ) ) {
 
 			if ( ! $this->validator->is_valid( $part ) )
-				return array();
+				return [];
 
 			return array ( $part, 1 );
 		}

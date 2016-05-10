@@ -38,7 +38,7 @@ class Mlp_Advanced_Translator_View {
 	 */
 	public function show_copy_button( $editor_id, $remote_site_id ) {
 
-		$matches = array();
+		$matches = [];
 
 		preg_match( '~mlp-translation-data-(\d+)-content~', $editor_id, $matches );
 		if ( empty( $matches[1] ) ) {

@@ -107,7 +107,7 @@ class Mlp_Admin_Bar_Customizer {
 
 		$titles = wp_cache_get( $this->cache_key, $this->cache_group );
 		if ( ! is_array( $titles ) ) {
-			$titles = array();
+			$titles = [];
 		} elseif ( isset( $titles[ $site_id ] ) ) {
 			return $titles[ $site_id ];
 		}

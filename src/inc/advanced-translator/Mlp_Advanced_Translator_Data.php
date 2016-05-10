@@ -28,7 +28,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	/**
 	 * @var array
 	 */
-	private $post_request_data = array();
+	private $post_request_data = [];
 
 	/**
 	 * @var Mlp_Site_Relations_Interface
@@ -40,7 +40,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 *
 	 * @var array
 	 */
-	private $save_context = array();
+	private $save_context = [];
 
 	/**
 	 * @param                                      $deprecated
@@ -164,7 +164,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 
 			$new_post = $this->create_post_to_send( $post_data, $post_type, $remote_blog_id );
 
-			if ( array() !== $new_post ) {
+			if ( [] !== $new_post ) {
 				$sync_thumb = ! empty( $post_data['thumbnail'] );
 				$update     = ! empty( $post_data['remote_post_id'] ) && 0 < $post_data['remote_post_id'];
 				$new_id     = $this->sync_post( $new_post, $post_id, $remote_blog_id, $update );
@@ -177,7 +177,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 					$this->copy_thumb( $new_id, $thumb_data );
 				}
 
-				$tax_data = empty( $post_data['tax'] ) ? array() : (array) $post_data['tax'];
+				$tax_data = empty( $post_data['tax'] ) ? [] : (array) $post_data['tax'];
 				$this->set_remote_tax_terms( $new_id, $tax_data );
 			}
 
@@ -344,7 +344,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		$excerpt = $this->get_remote_post_excerpt( $post_data );
 
 		if ( $this->is_empty_remote_post( $title, $content, $post_type ) ) {
-			return array();
+			return [];
 		}
 
 		$new_post_data = array(
@@ -433,7 +433,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 */
 	private function get_taxonomies_with_terms( WP_Post $post ) {
 
-		$out = array();
+		$out = [];
 
 		$taxonomies = get_object_taxonomies( $post, 'objects' );
 
@@ -481,7 +481,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 */
 	private function set_remote_tax_terms( $new_id, array $tax_data ) {
 
-		$errors = array();
+		$errors = [];
 
 		$post = get_post( $new_id );
 
@@ -491,9 +491,9 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 				continue;
 			}
 
-			$terms = array();
+			$terms = [];
 
-			$term_ids = empty( $tax_data[ $taxonomy ] ) ? array() : (array) $tax_data[ $taxonomy ];
+			$term_ids = empty( $tax_data[ $taxonomy ] ) ? [] : (array) $tax_data[ $taxonomy ];
 			foreach ( $term_ids as $term_id ) {
 				$term = get_term_by( 'id', (int) $term_id, $taxonomy );
 				if ( $term ) {
@@ -708,7 +708,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 */
 	private function set_active_terms( array $terms, $taxonomy, WP_Post $post ) {
 
-		$out = array();
+		$out = [];
 
 		foreach ( $terms as $term ) {
 			$term->active = has_term( $term->term_id, $taxonomy, $post );

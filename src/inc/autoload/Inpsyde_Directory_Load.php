@@ -57,7 +57,7 @@ class Inpsyde_Directory_Load implements Inpsyde_Autoload_Rule_Interface {
 	 */
 	private function read_files() {
 
-		$return = array();
+		$return = [];
 		$files  = glob( $this->dir . '/*.php' );
 
 		// Catch empty values to prevent multiple attempts to read the directory.

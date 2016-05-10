@@ -166,7 +166,7 @@ class Mlp_Helpers {
 		$element_id = self::get_default_content_id( $element_id );
 
 		if ( ! $element_id )
-			return array();
+			return [];
 
 		// If no ID is provided, get current blogs' ID
 		if ( 0 === $blog_id )
@@ -192,7 +192,7 @@ class Mlp_Helpers {
 	public static function get_interlinked_permalinks( $element_id = 0, $type = '' ) {
 
 		if ( ! is_singular() && ! is_tag() && !is_category() && ! is_tax() )
-			return array();
+			return [];
 
 		$return     = array ();
 		              /** @var Mlp_Language_Api $api */
@@ -409,7 +409,7 @@ class Mlp_Helpers {
 			return '';
 		}
 
-		$items = array();
+		$items = [];
 
 		/** @var Mlp_Translation_Interface $translation */
 		foreach ( $translations as $site_id => $translation ) {

@@ -56,11 +56,11 @@ class Mlp_Array_Diff {
 	 */
 	private function normalize_new_array( Array $new, Array $old ) {
 
-		$out = array();
+		$out = [];
 
 		foreach ( $new as $new_id => $new_data ) {
 
-			$out[ $new_id ] = array();
+			$out[ $new_id ] = [];
 
 			foreach ( $this->columns as $col_name => $col_params ) {
 
