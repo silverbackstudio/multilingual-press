@@ -26,7 +26,7 @@ class Inpsyde_Autoload
 	 */
 	public function __construct()
 	{
-		spl_autoload_register( array( $this, 'load' ) );
+		spl_autoload_register( [ $this, 'load' ] );
 	}
 
 	/**

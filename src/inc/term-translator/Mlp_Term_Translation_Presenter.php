@@ -87,7 +87,7 @@ class Mlp_Term_Translation_Presenter {
 		if ( ! current_user_can( $taxonomy_object->cap->edit_terms ) ) {
 			$terms = [];
 		} else {
-			$terms = get_terms( $this->taxonomy_name, array( 'hide_empty' => FALSE ) );
+			$terms = get_terms( $this->taxonomy_name, [ 'hide_empty' => FALSE ] );
 		}
 
 		foreach ( $terms as $term ) {

@@ -62,10 +62,10 @@ class Inpsyde_Directory_Load implements Inpsyde_Autoload_Rule_Interface {
 
 		// Catch empty values to prevent multiple attempts to read the directory.
 		if ( FALSE === $files )
-			return array( 'error' );
+			return [ 'error' ];
 
 		if ( [] === $files )
-			return array( 'empty' );
+			return [ 'empty' ];
 
 		foreach ( $files as $file )
 			$return[ basename( $file, '.php' ) ] = 1;

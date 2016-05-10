@@ -38,15 +38,15 @@ class Mlp_Trasher {
 		}
 
 		// Register Trasher post meta to the submit box.
-		add_action( 'post_submitbox_misc_actions', array( $this, 'post_submitbox_misc_actions' ) );
+		add_action( 'post_submitbox_misc_actions', [ $this, 'post_submitbox_misc_actions' ] );
 
 		// Trash and delete the post method before WordPress 3.2.0.
-		add_action( 'trash_post', array( $this, 'trash_post' ) );
+		add_action( 'trash_post', [ $this, 'trash_post' ] );
 
 		// Trash and delete the post method after WordPress 3.2.0.
-		add_action( 'wp_trash_post', array( $this, 'trash_post' ) );
+		add_action( 'wp_trash_post', [ $this, 'trash_post' ] );
 
-		add_action( 'save_post', array( $this, 'save_post' ) );
+		add_action( 'save_post', [ $this, 'save_post' ] );
 	}
 
 	/**
@@ -101,7 +101,7 @@ class Mlp_Trasher {
 		}
 
 		// remove filter to avoid recursion
-		remove_filter( current_filter(), array( $this, __FUNCTION__ ) );
+		remove_filter( current_filter(), [ $this, __FUNCTION__ ] );
 
 		$linked_posts = mlp_get_linked_elements( $post_id );
 		foreach ( $linked_posts as $linked_blog => $linked_post ) {
@@ -112,7 +112,7 @@ class Mlp_Trasher {
 			restore_current_blog();
 		}
 
-		add_filter( current_filter(), array( $this, __FUNCTION__ ) );
+		add_filter( current_filter(), [ $this, __FUNCTION__ ] );
 	}
 
 	/**
@@ -131,7 +131,7 @@ class Mlp_Trasher {
 
 		// We're only interested in published posts at this time
 		$post_status = get_post_status( $post_id );
-		if ( ! in_array( $post_status, array( 'publish', 'draft' ), true ) ) {
+		if ( ! in_array( $post_status, [ 'publish', 'draft' ], true ) ) {
 			return;
 		}
 
@@ -182,10 +182,10 @@ class Mlp_Trasher {
 			'multilingual-press'
 		);
 
-		return $this->module_manager->register( array(
+		return $this->module_manager->register( [
 			'display_name' => __( 'Trasher', 'multilingual-press' ),
 			'slug'         => 'class-' . __CLASS__,
 			'description'  => $description,
-		) );
+		] );
 	}
 }

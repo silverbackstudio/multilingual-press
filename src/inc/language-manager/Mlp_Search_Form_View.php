@@ -14,11 +14,11 @@ class Mlp_Search_Form_View {
 	 */
 	public function get_search_field( Array $attributes = [] ) {
 
-		$default = array(
+		$default = [
 			'type'  => 'search',
 			'name'  => 's',
 			'value' => ''
-		);
+		];
 
 		$attributes = array_merge( $default, $attributes );
 

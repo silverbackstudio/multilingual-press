@@ -123,12 +123,12 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return;
 		}
 
-		$this->save_context = array(
+		$this->save_context = [
 			'source_blog'    => get_current_blog_id(),
 			'source_post'    => $post,
 			'real_post_type' => $post_type,
 			'real_post_id'   => $post_id,
-		);
+		];
 
 		$this->basic_data->set_save_context( $this->save_context );
 
@@ -267,7 +267,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		}
 
 		$wp_filetype = wp_check_filetype( $filedir['url'] . '/' . $filename );
-		$attachment  = array(
+		$attachment  = [
 			'post_mime_type' => $wp_filetype['type'],
 			'guid'           => $filedir['url'] . '/' . $filename,
 			'post_parent'    => $new_id,
@@ -275,7 +275,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			'post_excerpt'   => '',
 			'post_author'    => get_current_user_id(),
 			'post_content'   => '',
-		);
+		];
 
 		$full_path = $filedir['path'] . '/' . $filename;
 		$attach_id = wp_insert_attachment( $attachment, $full_path );
@@ -347,14 +347,14 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return [];
 		}
 
-		$new_post_data = array(
+		$new_post_data = [
 			'post_type'    => $post_type,
 			'post_title'   => $title,
 			'post_name'    => $name,
 			'post_content' => $content,
 			'post_excerpt' => $excerpt,
 			'post_parent'  => $this->basic_data->get_post_parent( $blog_id ),
-		);
+		];
 
 		if ( ! empty( $post_data['remote_post_id'] ) ) {
 			$new_post_data['ID'] = $post_data['remote_post_id'];
@@ -444,7 +444,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 				continue;
 			}
 
-			$terms = get_terms( $taxonomy, array( 'hide_empty' => false ) );
+			$terms = get_terms( $taxonomy, [ 'hide_empty' => false ] );
 
 			// we do not allow creating new terms
 			if ( empty( $terms ) ) {
@@ -454,15 +454,15 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			$terms = $this->set_active_terms( $terms, $taxonomy, $post );
 
 			if ( $this->taxonomy_is_mutually_exclusive( $taxonomy ) ) {
-				$out['exclusive'][ $taxonomy ] = array(
+				$out['exclusive'][ $taxonomy ] = [
 					'properties' => $properties,
 					'terms'      => $terms,
-				);
+				];
 			} else {
-				$out['inclusive'][ $taxonomy ] = array(
+				$out['inclusive'][ $taxonomy ] = [
 					'properties' => $properties,
 					'terms'      => $terms,
-				);
+				];
 			}
 		}
 
@@ -642,7 +642,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 */
 	private function is_connectable_status( WP_Post $post ) {
 
-		if ( in_array( $post->post_status, array( 'publish', 'draft', 'private', 'auto-draft' ), true ) ) {
+		if ( in_array( $post->post_status, [ 'publish', 'draft', 'private', 'auto-draft' ], true ) ) {
 			return true;
 		}
 
@@ -692,7 +692,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		 *
 		 * @param string[] $taxonomies Mutually exclusive taxonomy names.
 		 */
-		$exclusive = apply_filters( 'mlp_mutually_exclusive_taxonomies', array( 'post_format' ) );
+		$exclusive = apply_filters( 'mlp_mutually_exclusive_taxonomies', [ 'post_format' ] );
 
 		return in_array( $taxonomy, $exclusive, true );
 	}

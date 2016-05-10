@@ -15,21 +15,23 @@ interface Mlp_Data_Access {
 
 	/**
 	 *
-	 * @param   Array $params array(
-	 *                          'page'      => Integer      // -1 to load all
-	 *                          'fields'    => Array,       // Array with fields. Empty to load all
-	 *                          'where'     => Array(
-	 *                              Array(
-	 *                                  'field'     => String
-	 *                                  'search'    => String
-	 *                                  'compare'   => String       //  '!=', '>', '>=', '<', or '<='. Default value is '='.
-	 *                          ),
-	 *                          'order_by'  => array(
-	 *                              Array(
-	 *                                  'field' => String,
-	 *                                  'order' => String           // ASC|DESC
-	 *                              ),
-	 *                        )
+	 * @param   Array $params [
+	 *                            'page'      => Integer      // -1 to load all
+	 *                            'fields'    => Array,       // Array with fields. Empty to load all
+	 *                            'where'     => [
+	 *                                [
+	 *                                    'field'     => String
+	 *                                    'search'    => String
+	 *                                    'compare'   => String       //  '!=', '>', '>=', '<', or '<='. Default value is '='.
+	 *                                ],
+	 *                            ],
+	 *                            'order_by'  => [
+	 *                                [
+	 *                                    'field' => String,
+	 *                                    'order' => String           // ASC|DESC
+	 *                                ],
+	 *                            ],
+	 *                        ]
 	 * @param   String $type
 	 * @return  Array $results
 	 */

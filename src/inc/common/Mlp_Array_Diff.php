@@ -134,21 +134,17 @@ class Mlp_Array_Diff {
 
 
 			if ( isset ( $col_params[ 'attributes' ][ 'min' ] ) ) {
-				$return = max(
-					array(
-						(int) $new_data[ $col_name ],
-						(int) $col_params[ 'attributes' ][ 'min' ]
-					)
-				);
+				$return = max( [
+					(int) $new_data[ $col_name ],
+					(int) $col_params[ 'attributes' ][ 'min' ]
+				] );
 			}
 
 			if ( isset ( $col_params[ 'attributes' ][ 'max' ] ) ) {
-				$return = min(
-					array(
-						(int) $new_data[ $col_name ],
-						(int) $col_params[ 'attributes' ][ 'max' ]
-					)
-				);
+				$return = min( [
+					(int) $new_data[ $col_name ],
+					(int) $col_params[ 'attributes' ][ 'max' ]
+				] );
 			}
 
 			return $return;
@@ -159,29 +155,29 @@ class Mlp_Array_Diff {
 }
 
 /* $columns format:
-array(
-	'native_name' => array(
+[
+	'native_name' => [
 		'header'     => esc_html__( 'Native name', 'multilingual-press' ),
 		'type'       => 'input_text',
-		'attributes' => array(
+		'attributes' => [
 			'size' => 20
-		)
-	),
-	'is_rtl' => array(
+		]
+	],
+	'is_rtl' => [
 		'header'     => esc_html__( 'RTL', 'multilingual-press' ),
 		'type'       => 'input_checkbox',
-		'attributes' => array(
+		'attributes' => [
 			'size' => 20
-		)
-	),
-	'priority' => array(
+		]
+	],
+	'priority' => [
 		'header'     => esc_html__( 'Priority', 'multilingual-press' ),
 		'type'       => 'input_number',
-		'attributes' => array(
+		'attributes' => [
 			'min'  => 1,
 			'max'  => 10,
 			'size' => 3
-		)
-	),
-)
- */
+		]
+	],
+]
+*/

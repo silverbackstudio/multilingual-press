@@ -65,7 +65,7 @@ class Mlp_Accept_Header_Parser implements Mlp_Accept_Header_Parser_Interface {
 			if ( ! $this->validator->is_valid( $part ) )
 				return [];
 
-			return array( $part, 1 );
+			return [ $part, 1 ];
 		}
 
 		// string with quality value like 'en;q=0.8'
@@ -79,7 +79,7 @@ class Mlp_Accept_Header_Parser implements Mlp_Accept_Header_Parser_Interface {
 		$priority = strtok( ';' );
 		$priority = $this->sanitize_priority( $priority );
 
-		return array( $key, $priority );
+		return [ $key, $priority ];
 	}
 
 	/**

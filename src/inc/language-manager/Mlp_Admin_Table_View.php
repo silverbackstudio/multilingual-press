@@ -89,9 +89,9 @@ class Mlp_Admin_Table_View {
 	 */
 	private function print_tbody() {
 
-		$params = array(
+		$params = [
 			'page' => $this->pagination_data->get_current_page()
-		);
+		];
 		$rows = $this->data->get_items( $params );
 
 		if ( ! $rows ) {
@@ -222,11 +222,11 @@ class Mlp_Admin_Table_View {
 	 */
 	private function prepare_input_data( $id, $col, $value, $attributes ) {
 
-		return array(
+		return [
 			$this->get_input_name( $id, $col ),
 			$this->html->array_to_attrs( $attributes ),
 			$value
-		);
+		];
 	}
 
 	/**

@@ -119,12 +119,12 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 
 		$to_translate = $this->post_request_data['mlp_to_translate'];
 
-		$this->save_context = array(
+		$this->save_context = [
 			'source_blog'    => get_current_blog_id(),
 			'source_post'    => $post,
 			'real_post_type' => $post_type,
 			'real_post_id'   => $post_id,
-		);
+		];
 
 		// Get the post
 		$post_data = get_post( $post_id, ARRAY_A );
@@ -150,7 +150,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 			}
 		}
 		// Create the post array
-		$new_post = array(
+		$new_post = [
 			'post_title'   => $post_data['post_title'],
 			'post_content' => $post_data['post_content'],
 			'post_status'  => 'draft',
@@ -158,7 +158,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 			'post_excerpt' => $post_data['post_excerpt'],
 			'post_date'    => $post_data['post_date'],
 			'post_type'    => $post_data['post_type'],
-		);
+		];
 
 		$this->find_post_parents( $post_data['post_type'], $post->post_parent );
 
@@ -196,7 +196,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 
 					if ( $copy ) {
 						$wp_filetype = wp_check_filetype( $filedir['url'] . '/' . $filename ); //get the file type
-						$attachment  = array(
+						$attachment  = [
 							'post_mime_type' => $wp_filetype['type'],
 							'guid'           => $filedir['url'] . '/' . $filename,
 							'post_parent'    => $remote_post_id,
@@ -204,7 +204,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 							'post_excerpt'   => '',
 							'post_author'    => $post_data['post_author'],
 							'post_content'   => '',
-						);
+						];
 
 						//insert the image
 						$attach_id = wp_insert_attachment( $attachment, $filedir['path'] . '/' . $filename );
@@ -390,10 +390,10 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	 */
 	public function get_dummy_post( $post_type ) {
 
-		return new WP_Post( (object) array(
+		return new WP_Post( (object) [
 			'post_type' => $post_type,
 			'dummy'     => true,
-		) );
+		] );
 	}
 
 	/**

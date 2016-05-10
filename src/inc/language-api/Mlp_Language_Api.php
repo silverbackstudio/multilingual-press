@@ -71,8 +71,8 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		$this->site_relations    = $site_relations;
 		$this->content_relations = $content_relations;
 
-		add_action( 'wp_loaded', array( $this, 'load_language_manager' ) );
-		add_filter( 'mlp_language_api', array( $this, 'get_instance' ) );
+		add_action( 'wp_loaded', [ $this, 'load_language_manager' ] );
+		add_filter( 'mlp_language_api', [ $this, 'get_instance' ] );
 	}
 
 	/**
@@ -239,13 +239,13 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			if ( ! isset ( $languages[ $site_id ] ) )
 				continue;
 
-			$translations[ $site_id ] = array(
+			$translations[ $site_id ] = [
 				'source_site_id'    => $arguments[ 'site_id' ],
 				'target_site_id'    => $site_id,
 				'type'              => $arguments[ 'type' ],
 				'target_content_id' => 0,
 				'target_title'      => ''
-			);
+			];
 		}
 
 		reset( $translations );
@@ -401,10 +401,10 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			if ( ! $editable )
 				return FALSE;
 
-			return array(
+			return [
 				'target_title' => $title,
 				'target_url'   => Mlp_Url_Factory::create( get_edit_post_link( $content_id ) )
-			);
+			];
 		}
 
 		// frontend
@@ -413,19 +413,19 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		do_action( 'mlp_after_link' );
 
 		if ( 'publish' === $post->post_status || $editable )
-			return array(
+			return [
 				'target_title' => $title,
 				'target_url'   => empty ( $url ) ? '' : Mlp_Url_Factory::create( $url )
-			);
+			];
 
 		// unpublished post, not editable
 		if ( $strict )
 			return FALSE;
 
-		return array(
+		return [
 			'target_title' => $title,
 			'target_url'   => ''
-		);
+		];
 	}
 
 	/**
@@ -544,7 +544,7 @@ WHERE `http_name` IN( $values )";
 			$like = $tag;
 		}
 
-		return array( $tag, $like );
+		return [ $tag, $like ];
 	}
 
 	/**
@@ -553,17 +553,14 @@ WHERE `http_name` IN( $values )";
 	 */
 	private function get_request_type() {
 
-		$checks = array(
+		$checks = [
 			'admin'             => 'is_admin',
-			'post'              => array( $this, 'is_singular' ),
-			'term'              => array(
-				$this,
-				'is_term_archive_request'
-			),
+			'post'              => [ $this, 'is_singular' ],
+			'term'              => [ $this, 'is_term_archive_request' ],
 			'post_type_archive' => 'is_post_type_archive',
 			'search'            => 'is_search',
 			'front_page'        => 'is_front_page',
-		);
+		];
 
 		foreach ( $checks as $type => $callback ) {
 
@@ -662,7 +659,7 @@ WHERE `http_name` IN( $values )";
 	 */
 	private function prepare_translation_arguments( Array $args ) {
 
-		$defaults = array(
+		$arguments = wp_parse_args( $args, [
 			// always greater than 0
 			'site_id'          => get_current_blog_id(),
 			// 0 if missing
@@ -673,9 +670,7 @@ WHERE `http_name` IN( $values )";
 			'post_type'        => $this->get_request_post_type(),
 			'include_base'     => false,
 			'suppress_filters' => false,
-		);
-
-		$arguments = wp_parse_args( $args, $defaults );
+		] );
 
 		/**
 		 * Filter the translation arguments.
@@ -735,7 +730,7 @@ WHERE `http_name` IN( $values )";
 		if ( empty ( $arguments[ 'content_id' ] ) )
 			return FALSE;
 
-		return in_array( $arguments['type'], array( 'post', 'term' ), true );
+		return in_array( $arguments['type'], [ 'post', 'term' ], true );
 	}
 
 	/**

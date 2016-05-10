@@ -65,11 +65,11 @@ class Mlp_Assets implements Mlp_Assets_Interface {
 			$this->locations->get_dir( $ext, 'url' )
 		);
 
-		$this->assets[ $handle ] = array(
+		$this->assets[ $handle ] = [
 			'url'          => $url,
 			'ext'          => $ext,
 			'dependencies' => $dependencies,
-		);
+		];
 
 		if ( $l10n ) {
 			$this->l10n[ $handle ] = $l10n;
@@ -88,7 +88,7 @@ class Mlp_Assets implements Mlp_Assets_Interface {
 	public function register() {
 
 		foreach ( $this->assets as $handle => $properties ) {
-			if ( ! in_array( $properties['ext'], array( 'js', 'css' ), true ) ) {
+			if ( ! in_array( $properties['ext'], [ 'js', 'css' ], true ) ) {
 				continue;
 			}
 
@@ -141,7 +141,7 @@ class Mlp_Assets implements Mlp_Assets_Interface {
 
 		$loader = new Mlp_Asset_Loader( $to_load, $this->l10n );
 
-		add_action( $action, array( $loader, 'enqueue' ) );
+		add_action( $action, [ $loader, 'enqueue' ] );
 
 		return TRUE;
 	}

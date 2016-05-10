@@ -61,7 +61,7 @@ class Mlp_New_Site_View {
 
 		$db = $this->language_api->get_db();
 
-		$languages = $db->get_items( array( 'page' => -1 ) );
+		$languages = $db->get_items( [ 'page' => -1 ] );
 		?>
 		<h2>
 			<?php esc_html_e( 'MultilingualPress', 'multilingual-press' ); ?>

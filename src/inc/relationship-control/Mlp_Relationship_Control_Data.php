@@ -12,12 +12,12 @@ class Mlp_Relationship_Control_Data {
 	/**
 	 * @var array
 	 */
-	private $ids = array(
+	private $ids = [
 		'source_post_id' => 0,
 		'source_site_id' => 0,
 		'remote_site_id' => 0,
 		'remote_post_id' => 0
-	);
+	];
 
 	/**
 	 * @var string
@@ -98,11 +98,11 @@ class Mlp_Relationship_Control_Data {
 		if ( ! $source_post )
 			return [];
 
-		$args = array(
+		$args = [
 			'numberposts' => 10,
 			'post_type'   => $source_post->post_type,
-			'post_status' => array( 'draft', 'publish', 'private' )
-		);
+			'post_status' => [ 'draft', 'publish', 'private' ]
+		];
 
 		if ( ! empty ( $this->ids[ 'remote_post_id' ] ) )
 			$args[ 'exclude' ] = $this->ids[ 'remote_post_id' ];

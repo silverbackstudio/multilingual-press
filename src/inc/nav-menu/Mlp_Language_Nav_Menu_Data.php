@@ -90,7 +90,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 */
 	public function register_script() {
 
-		$this->assets->provide( array( 'mlp-admin', 'mlp_admin_css' ) );
+		$this->assets->provide( [ 'mlp-admin', 'mlp_admin_css' ] );
 	}
 
 	/**
@@ -104,12 +104,12 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 			return;
 		}
 
-		wp_localize_script( 'mlp-admin', 'mlpNavMenusSettings', array(
+		wp_localize_script( 'mlp-admin', 'mlpNavMenusSettings', [
 			'action'    => $this->handle,
 			'metaBoxID' => $this->handle,
 			'nonce'     => wp_create_nonce( $this->nonce->get_action() ),
 			'nonceName' => $this->nonce->get_name(),
-		) );
+		] );
 	}
 
 	/**
@@ -196,13 +196,13 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 */
 	private function create_menu_item( $titles, $blog_id ) {
 
-		$item_id = wp_update_nav_menu_item( $_GET['menu'], 0, array(
+		$item_id = wp_update_nav_menu_item( $_GET['menu'], 0, [
 			'menu-item-title'      => esc_attr( $titles[ $blog_id ] ),
 			'menu-item-type'       => 'language',
 			'menu-item-object'     => 'custom',
 			'menu-item-url'        => get_home_url( $blog_id, '/' ),
 			'menu_item-type-label' => esc_html__( 'Language', 'multilingual-press' ),
-		) );
+		] );
 
 		return get_post( $item_id );
 	}

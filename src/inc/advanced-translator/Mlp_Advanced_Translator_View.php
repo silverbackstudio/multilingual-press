@@ -168,16 +168,16 @@ class Mlp_Advanced_Translator_View {
 
 		$this->show_copy_button( $editor_id, $remote_blog_id );
 
-		wp_editor( $remote_post->post_content, $editor_id, array(
+		wp_editor( $remote_post->post_content, $editor_id, [
 			'tabindex'      => false,
 			'editor_height' => 150,
 			'resize'        => true,
 			'textarea_name' => $this->get_name( $remote_blog_id, 'content' ),
 			'media_buttons' => false,
-			'tinymce'       => array(
+			'tinymce'       => [
 				'resize' => true,
-			),
-		) );
+			],
+		] );
 	}
 
 	/**

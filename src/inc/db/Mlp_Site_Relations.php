@@ -128,7 +128,7 @@ class Mlp_Site_Relations implements Mlp_Site_Relations_Interface {
 
 		// Swap values to make sure the lower value is the first.
 		if ( $site_1 > $site_2 )
-			list ( $site_1, $site_2 ) = array( $site_2, $site_1 );
+			list ( $site_1, $site_2 ) = [ $site_2, $site_1 ];
 
 		return '(' . (int) $site_1 . ', ' . (int) $site_2 . ')';
 	}

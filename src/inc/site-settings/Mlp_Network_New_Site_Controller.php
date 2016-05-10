@@ -41,7 +41,7 @@ class Mlp_Network_New_Site_Controller {
 		$this->language_api  = $language_api;
 		$this->site_relation = $site_relation;
 
-		add_action( 'wpmu_new_blog', array( $this, 'update' ) );
+		add_action( 'wpmu_new_blog', [ $this, 'update' ] );
 
 		// TODO: Simplify, by deleting the template stuff, with the release of WordPress 4.5.0 + 2.
 		$view = new Mlp_New_Site_View( $this->language_api );
@@ -49,9 +49,9 @@ class Mlp_Network_New_Site_Controller {
 		require ABSPATH . WPINC . '/version.php';
 		/** @var string $wp_version */
 		if ( version_compare( $wp_version, '4.5-alpha', '<' ) ) {
-			add_action( 'admin_footer', array( $view, 'print_template' ) );
+			add_action( 'admin_footer', [ $view, 'print_template' ] );
 		} else {
-			add_action( 'network_site_new_form', array( $view, 'render' ) );
+			add_action( 'network_site_new_form', [ $view, 'render' ] );
 		}
 	}
 
@@ -123,17 +123,17 @@ class Mlp_Network_New_Site_Controller {
 			return;
 
 		// search for wp_locale where search = $http_name
-		$search = array(
-			'fields'=> array(
+		$search = [
+			'fields'=> [
 				'wp_locale'
-			),
-			'where' => array(
-				array(
+			],
+			'where' => [
+				[
 					'field'     => 'http_name',
 					'search'    => $posted
-				)
-			)
-		);
+				]
+			]
+		];
 
 		$available_language = $this->language_api->get_db()->get_items( $search, OBJECT );
 

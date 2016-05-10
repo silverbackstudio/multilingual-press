@@ -104,9 +104,9 @@ class Mlp_Language_Updater {
 	private function get_existing_items() {
 
 		$page   = $this->pagination_data->get_current_page();
-		$params = array(
+		$params = [
 			'page' => $page
-		);
+		];
 		$before = $this->db->get_items( $params );
 		$return = [];
 
@@ -131,9 +131,9 @@ class Mlp_Language_Updater {
 
 		$this->db->update_items_by_id(
 			$diff,
-			array(
+			[
 				'%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d'
-			)
+			]
 		);
 
 		return $amount;

@@ -21,7 +21,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 	/**
 	 * @var array
 	 */
-	private $fields = array(
+	private $fields = [
 		    'ID' => '%d',
             'english_name' => '%s',
             'native_name' =>  '%s',
@@ -32,12 +32,12 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
             'wp_locale' => '%s',
             'http_name' => '%s',
             'priority' => '%d',
-	);
+	];
 
 	/**
 	 * @var array
 	 */
-	private $compare_operators = array(
+	private $compare_operators = [
 		'=',
 		'<=>',
 		'>',
@@ -51,7 +51,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 		'NOT REGEXP',
 		'REGEXP',
 		'RLIKE',
-	);
+	];
 
 	/**
 	 * @param     $table_name
@@ -86,21 +86,21 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 
 		global $wpdb;
 
-		$default_params = array(
+		$default_params = [
 			'page'     => 1,
 			'fields'   => [],
 			'where'    => [],
-			'order_by' => array(
-				array(
+			'order_by' => [
+				[
 					'field' => 'priority',
 					'order' => 'DESC',
-				),
-				array(
+				],
+				[
 					'field' => 'english_name',
 					'order' => 'ASC',
-				),
-			),
-		);
+				],
+			],
+		];
 		$params = wp_parse_args( $params, $default_params );
 
 		$select_fields = '';
@@ -173,7 +173,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 				$order .= ',' . $field;
 				if ( ! empty( $order_by['order'] ) ) {
 					$_order_by = strtoupper( $order_by['order'] );
-					if ( in_array( $_order_by, array( 'ASC', 'DESC' ), true ) ) {
+					if ( in_array( $_order_by, [ 'ASC', 'DESC' ], true ) ) {
 						$order .= ' ' . $_order_by;
 					}
 				}
@@ -209,7 +209,7 @@ class Mlp_Language_Db_Access implements Mlp_Data_Access {
 			$wpdb->update(
 				$this->table_name,
 				(array) $values,
-				array( 'ID' => $id ),
+				[ 'ID' => $id ],
 				$field_format,
 				$where_format
 			);

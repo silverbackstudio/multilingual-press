@@ -37,10 +37,10 @@ class Mlp_Relationship_Control_Ajax_Search {
 
 	public function send_response() {
 
-		wp_send_json_success( array(
+		wp_send_json_success( [
 			'html'         => $this->get_formatted_results(),
 			'remoteSiteID' => $this->data->get_remote_site_id(),
-		) );
+		] );
 	}
 
 	public function show_search_results() {

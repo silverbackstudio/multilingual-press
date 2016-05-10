@@ -73,7 +73,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 			);
 
 			$siteoption = get_site_option( 'inpsyde_multilingual', [] );
-			$languages  = $this->language_api->get_db()->get_items( array( 'page' => -1 )  );
+			$languages  = $this->language_api->get_db()->get_items( [ 'page' => -1 ]  );
 
 			echo '<table class="form-table mlp-admin-settings-table">';
 			$this->show_language_options( $siteoption, $languages );

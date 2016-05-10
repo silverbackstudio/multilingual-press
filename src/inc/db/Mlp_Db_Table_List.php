@@ -56,7 +56,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 
 		wp_cache_set( 'table_names', $names, $this->cache_group );
 
-		if ( array( $this->no_tables_found ) === $names )
+		if ( [ $this->no_tables_found ] === $names )
 			return [];
 
 		return $names;
@@ -125,11 +125,11 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 	 */
 	public function get_mlp_tables() {
 
-		return array(
+		return [
 			$this->wpdb->base_prefix . 'mlp_languages',
 			$this->wpdb->base_prefix . 'mlp_site_relations',
 			$this->wpdb->base_prefix . 'multilingual_linked'
-		);
+		];
 	}
 
 	/**
@@ -216,7 +216,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 
 		// Make sure there is something in the array, so we don't try that again.
 		if ( empty ( $names ) )
-			return array( $this->no_tables_found );
+			return [ $this->no_tables_found ];
 
 		return $names;
 	}

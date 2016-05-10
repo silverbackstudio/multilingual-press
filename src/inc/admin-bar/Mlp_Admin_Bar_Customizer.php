@@ -58,12 +58,10 @@ class Mlp_Admin_Bar_Customizer {
 			return $wp_admin_bar;
 		}
 
-		$wp_admin_bar->add_node(
-			array(
-				'id'    => 'site-name',
-				'title' => $title,
-			)
-		);
+		$wp_admin_bar->add_node( [
+			'id'    => 'site-name',
+			'title' => $title,
+		] );
 
 		return $wp_admin_bar;
 	}

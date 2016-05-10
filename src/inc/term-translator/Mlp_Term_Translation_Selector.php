@@ -233,7 +233,7 @@ class Mlp_Term_Translation_Selector {
 	 */
 	private function get_label_id( $key ) {
 
-		return str_replace( array( '[', ']' ), '', $key );
+		return str_replace( [ '[', ']' ], '', $key );
 	}
 
 }

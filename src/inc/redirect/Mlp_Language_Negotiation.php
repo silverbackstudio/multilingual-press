@@ -38,9 +38,9 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	public function get_redirect_match() {
 
-		$translations = $this->language_api->get_translations(
-			array( 'include_base' => TRUE )
-		);
+		$translations = $this->language_api->get_translations( [
+			'include_base' => TRUE
+		] );
 
 		if ( empty ( $translations ) )
 			return $this->get_fallback_match();
@@ -50,7 +50,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 		if ( empty ( $possible ) )
 			return $this->get_fallback_match();
 
-		uasort( $possible, array( $this, 'sort_priorities' ) );
+		uasort( $possible, [ $this, 'sort_priorities' ] );
 
 		return array_pop( $possible );
 	}
@@ -80,12 +80,12 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	private function get_fallback_match() {
 
-		return array(
+		return [
 			'priority' => 0,
 			'url'      => '',
 			'language' => '',
 			'site_id'  => 0
-		);
+		];
 	}
 
 	/**
@@ -114,12 +114,12 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 			return;
 
 		$combined_value   = $language->get_priority() * $user_priority;
-		$possible[]       = array(
+		$possible[]       = [
 			'priority' => $combined_value,
 			'url'      => $url,
 			'language' => $language->get_name( 'http' ),
 			'site_id'  => $site_id
-		);
+		];
 	}
 
 	/**
