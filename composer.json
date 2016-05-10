@@ -41,5 +41,13 @@
   "require-dev": {
     "php": ">=5.4.0",
     "phpunit/phpunit": "~4.8|~5.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Inpsyde\\MultilingualPress\\": "src/"
+    },
+    "classmap": [
+      "src/_deprecated/"
+    ]
   }
 }

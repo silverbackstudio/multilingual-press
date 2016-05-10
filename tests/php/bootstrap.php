@@ -6,6 +6,7 @@ require_once $parent_dir . 'vendor/autoload.php';
 
 $src_dir = $parent_dir . 'src/';
 
-require_once $src_dir . 'inc/autoload/Mlp_Load_Controller.php';
+// TODO: Adapt paths.
+require_once $src_dir . '_todo/autoload/Mlp_Load_Controller.php';
 
-new Mlp_Load_Controller( $src_dir . 'inc' );
+new Mlp_Load_Controller( $src_dir . '_todo' );
