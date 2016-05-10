@@ -203,7 +203,7 @@ class Mlp_Copy_Attachments
 
 		global $wpdb;
 
-		$out = array ();
+		$out = [];
 
 		$meta = $wpdb->get_results( "SELECT `meta_value`
 			FROM `$wpdb->postmeta`

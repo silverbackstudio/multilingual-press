@@ -85,7 +85,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 			$this->tab_page_data->get_nonce_action(),
 			$this->tab_page_data->get_nonce_name()
 			) )
-			wp_die( 'Invalid', 'Invalid', array ( 'response' => 403 ) );
+			wp_die( 'Invalid', 'Invalid', array( 'response' => 403 ) );
 
 		$blog_id = $this->get_blog_id();
 
@@ -114,7 +114,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 		$languages = (array) get_site_option( 'inpsyde_multilingual', [] );
 
 		if ( empty ( $languages[ $blog_id ] ) )
-			$languages[ $blog_id ] = array ();
+			$languages[ $blog_id ] = [];
 
 		if ( ! isset ( $_POST[ 'inpsyde_multilingual_lang' ] )
 			or '-1' === $_POST[ 'inpsyde_multilingual_lang' ]
@@ -237,7 +237,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 */
 	private function get_new_relations( $new_related, $old_related ) {
 
-		$add_ids = array ();
+		$add_ids = [];
 
 		// Set new relations.
 		foreach ( $new_related as $new_blog_id ) {

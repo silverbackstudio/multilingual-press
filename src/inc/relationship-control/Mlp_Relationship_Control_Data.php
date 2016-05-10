@@ -12,7 +12,7 @@ class Mlp_Relationship_Control_Data {
 	/**
 	 * @var array
 	 */
-	private $ids = array (
+	private $ids = array(
 		'source_post_id' => 0,
 		'source_site_id' => 0,
 		'remote_site_id' => 0,
@@ -27,7 +27,7 @@ class Mlp_Relationship_Control_Data {
 	/**
 	 * @param array $ids
 	 */
-	public function __construct( Array $ids = array () ) {
+	public function __construct( Array $ids = [] ) {
 
 		if ( ! empty ( $ids ) ) {
 			$this->ids = $ids;
@@ -91,17 +91,17 @@ class Mlp_Relationship_Control_Data {
 		if ( 0 === $this->ids[ 'remote_site_id' ]
 			or 0 === $this->ids[ 'source_site_id' ]
 		)
-			return array ();
+			return [];
 
 		$source_post = $this->get_source_post();
 
 		if ( ! $source_post )
-			return array ();
+			return [];
 
-		$args = array (
+		$args = array(
 			'numberposts' => 10,
 			'post_type'   => $source_post->post_type,
-			'post_status' => array ( 'draft', 'publish', 'private' )
+			'post_status' => array( 'draft', 'publish', 'private' )
 		);
 
 		if ( ! empty ( $this->ids[ 'remote_post_id' ] ) )
@@ -117,7 +117,7 @@ class Mlp_Relationship_Control_Data {
 		restore_current_blog();
 
 		if ( empty ( $posts ) )
-			return array ();
+			return [];
 
 		return $posts;
 	}

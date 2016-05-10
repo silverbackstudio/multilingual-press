@@ -41,7 +41,7 @@ class Mlp_Network_New_Site_Controller {
 		$this->language_api  = $language_api;
 		$this->site_relation = $site_relation;
 
-		add_action( 'wpmu_new_blog', array ( $this, 'update' ) );
+		add_action( 'wpmu_new_blog', array( $this, 'update' ) );
 
 		// TODO: Simplify, by deleting the template stuff, with the release of WordPress 4.5.0 + 2.
 		$view = new Mlp_New_Site_View( $this->language_api );
@@ -82,7 +82,7 @@ class Mlp_Network_New_Site_Controller {
 		$languages = (array) get_site_option( 'inpsyde_multilingual', [] );
 
 		if ( empty ( $languages[ $blog_id ] ) )
-			$languages[ $blog_id ] = array ();
+			$languages[ $blog_id ] = [];
 
 		$languages[ $blog_id ][ 'lang' ] = str_replace( '-', '_', $posted );
 

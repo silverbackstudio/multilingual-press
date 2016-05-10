@@ -14,7 +14,7 @@ class Mlp_Search_Form_View {
 	 */
 	public function get_search_field( Array $attributes = [] ) {
 
-		$default = array (
+		$default = array(
 			'type'  => 'search',
 			'name'  => 's',
 			'value' => ''

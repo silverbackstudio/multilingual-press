@@ -17,7 +17,7 @@ class Mlp_Cpt_Translator_Extra_General_Settings_Box_Data
 	/**
 	 * @var array
 	 */
-	private $post_types = array ();
+	private $post_types = [];
 
 	/**
 	 * Prefix for 'name' attribute in form fields.

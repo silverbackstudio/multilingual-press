@@ -58,8 +58,8 @@ class Mlp_Duplicate_Blogs {
 	 */
 	public function setup() {
 
-		add_filter( 'wpmu_new_blog', array ( $this, 'wpmu_new_blog' ), 10, 2 );
-		add_filter( 'mlp_after_new_blog_fields', array ( $this, 'display_fields' ) );
+		add_filter( 'wpmu_new_blog', array( $this, 'wpmu_new_blog' ), 10, 2 );
+		add_filter( 'mlp_after_new_blog_fields', array( $this, 'display_fields' ) );
 	}
 
 	/**
@@ -78,7 +78,7 @@ class Mlp_Duplicate_Blogs {
 		$source_blog_id = (int) $_POST[ 'blog' ][ 'basedon' ];
 
 		// Hook information
-		$context = array (
+		$context = array(
 			'source_blog_id' => $source_blog_id,
 			'new_blog_id'    => $blog_id,
 		);
@@ -372,17 +372,17 @@ LIMIT 2";
 	 */
 	private function update_file_urls( $copy_files ) {
 
-		$tables = array (
-			$this->wpdb->posts         => array (
+		$tables = array(
+			$this->wpdb->posts         => array(
 				'guid',
 				'post_content',
 				'post_excerpt',
 				'post_content_filtered',
 			),
-			$this->wpdb->term_taxonomy => array (
+			$this->wpdb->term_taxonomy => array(
 				'description'
 			),
-			$this->wpdb->comments      => array (
+			$this->wpdb->comments      => array(
 				'comment_content'
 			)
 		);

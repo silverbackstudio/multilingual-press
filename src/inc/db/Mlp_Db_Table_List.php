@@ -56,7 +56,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 
 		wp_cache_set( 'table_names', $names, $this->cache_group );
 
-		if ( array ( $this->no_tables_found ) === $names )
+		if ( array( $this->no_tables_found ) === $names )
 			return [];
 
 		return $names;
@@ -106,7 +106,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 		$all_tables = $this->get_all_table_names();
 		$prefix     = $this->wpdb->get_blog_prefix( $site_id );
 		$exclude    = $this->get_not_custom_site_tables( $site_id, $prefix );
-		$out        = array ();
+		$out        = [];
 
 		foreach ( $all_tables as $name ) {
 
@@ -125,7 +125,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 	 */
 	public function get_mlp_tables() {
 
-		return array (
+		return array(
 			$this->wpdb->base_prefix . 'mlp_languages',
 			$this->wpdb->base_prefix . 'mlp_site_relations',
 			$this->wpdb->base_prefix . 'multilingual_linked'
@@ -216,7 +216,7 @@ class Mlp_Db_Table_List implements Mlp_Db_Table_List_Interface {
 
 		// Make sure there is something in the array, so we don't try that again.
 		if ( empty ( $names ) )
-			return array ( $this->no_tables_found );
+			return array( $this->no_tables_found );
 
 		return $names;
 	}

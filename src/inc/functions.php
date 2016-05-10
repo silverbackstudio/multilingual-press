@@ -212,7 +212,7 @@ if ( ! function_exists( 'blog_exists' ) ) {
 
 		/** @type wpdb $wpdb */
 		global $wpdb;
-		static $cache = array ();
+		static $cache = [];
 
 		$site_id = (int) $site_id;
 
@@ -231,7 +231,7 @@ if ( ! function_exists( 'blog_exists' ) ) {
 
 			// Make sure the array is always filled with something.
 			if ( empty ( $result ) )
-				$cache[ $site_id ] = array ( 'do not check again' );
+				$cache[ $site_id ] = array( 'do not check again' );
 			else
 				$cache[ $site_id ] = $result;
 		}

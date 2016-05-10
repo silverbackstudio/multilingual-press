@@ -39,7 +39,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	public function get_redirect_match() {
 
 		$translations = $this->language_api->get_translations(
-			array ( 'include_base' => TRUE )
+			array( 'include_base' => TRUE )
 		);
 
 		if ( empty ( $translations ) )
@@ -50,7 +50,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 		if ( empty ( $possible ) )
 			return $this->get_fallback_match();
 
-		uasort( $possible, array ( $this, 'sort_priorities' ) );
+		uasort( $possible, array( $this, 'sort_priorities' ) );
 
 		return array_pop( $possible );
 	}
@@ -61,7 +61,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	private function get_possible_matches( Array $translations ) {
 
-		$possible = array ();
+		$possible = [];
 
 		$user = $this->parse_accept_header( $_SERVER[ 'HTTP_ACCEPT_LANGUAGE' ] );
 
@@ -80,7 +80,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	private function get_fallback_match() {
 
-		return array (
+		return array(
 			'priority' => 0,
 			'url'      => '',
 			'language' => '',
@@ -114,7 +114,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 			return;
 
 		$combined_value   = $language->get_priority() * $user_priority;
-		$possible[]       = array (
+		$possible[]       = array(
 			'priority' => $combined_value,
 			'url'      => $url,
 			'language' => $language->get_name( 'http' ),
@@ -170,7 +170,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 		if ( empty ( $fields ) )
 			return $fields;
 
-		$out = array ();
+		$out = [];
 
 		foreach ( $fields as $name => $priority ) {
 

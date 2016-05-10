@@ -29,7 +29,7 @@ class Mlp_Array_Diff {
 	 */
 	public function get_difference( Array $old, Array $new ) {
 
-		$diff = array ();
+		$diff = [];
 		$new  = $this->normalize_new_array( $new, $old );
 
 		foreach ( $old as $old_id => $old_data_array ) {
@@ -135,7 +135,7 @@ class Mlp_Array_Diff {
 
 			if ( isset ( $col_params[ 'attributes' ][ 'min' ] ) ) {
 				$return = max(
-					array (
+					array(
 						(int) $new_data[ $col_name ],
 						(int) $col_params[ 'attributes' ][ 'min' ]
 					)
@@ -144,7 +144,7 @@ class Mlp_Array_Diff {
 
 			if ( isset ( $col_params[ 'attributes' ][ 'max' ] ) ) {
 				$return = min(
-					array (
+					array(
 						(int) $new_data[ $col_name ],
 						(int) $col_params[ 'attributes' ][ 'max' ]
 					)
@@ -159,25 +159,25 @@ class Mlp_Array_Diff {
 }
 
 /* $columns format:
-array (
-	'native_name' => array (
+array(
+	'native_name' => array(
 		'header'     => esc_html__( 'Native name', 'multilingual-press' ),
 		'type'       => 'input_text',
-		'attributes' => array (
+		'attributes' => array(
 			'size' => 20
 		)
 	),
-	'is_rtl' => array (
+	'is_rtl' => array(
 		'header'     => esc_html__( 'RTL', 'multilingual-press' ),
 		'type'       => 'input_checkbox',
-		'attributes' => array (
+		'attributes' => array(
 			'size' => 20
 		)
 	),
-	'priority' => array (
+	'priority' => array(
 		'header'     => esc_html__( 'Priority', 'multilingual-press' ),
 		'type'       => 'input_number',
-		'attributes' => array (
+		'attributes' => array(
 			'min'  => 1,
 			'max'  => 10,
 			'size' => 3

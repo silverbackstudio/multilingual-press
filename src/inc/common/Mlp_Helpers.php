@@ -15,7 +15,7 @@ class Mlp_Helpers {
 	 * @see Mlp_Helpers::insert_dependency()
 	 * @type array
 	 */
-	private static $dependencies = array ();
+	private static $dependencies = [];
 
 	/**
 	 * @var string
@@ -74,13 +74,13 @@ class Mlp_Helpers {
 	 */
 	public static function get_available_languages( $not_related = FALSE ) {
 
-		$related_blogs = array ();
+		$related_blogs = [];
 
 		// Get all registered blogs
 		$languages = get_site_option( 'inpsyde_multilingual' );
 
 		if ( empty ( $languages ) )
-			return array ();
+			return [];
 
 		/** @var Mlp_Site_Relations $site_relations */
 		$site_relations = self::$dependencies[ 'site_relations' ];
@@ -94,10 +94,10 @@ class Mlp_Helpers {
 
 			// No related blogs? Leave here.
 			if ( empty ( $related_blogs ) )
-				return array ();
+				return [];
 		}
 
-		$options = array ();
+		$options = [];
 
 		// Loop through blogs
 		foreach ( $languages as $language_blogid => $language_data ) {
@@ -194,7 +194,7 @@ class Mlp_Helpers {
 		if ( ! is_singular() && ! is_tag() && !is_category() && ! is_tax() )
 			return [];
 
-		$return     = array ();
+		$return     = [];
 		              /** @var Mlp_Language_Api $api */
 		$api        = self::$dependencies[ 'language_api' ];
 		$site_id    = get_current_blog_id();
@@ -224,7 +224,7 @@ class Mlp_Helpers {
 			if ( empty ( $url ) )
 				continue;
 
-			$return[ $remote_site_id ] = array (
+			$return[ $remote_site_id ] = array(
 				'post_id'        => $translation->get_target_content_id(),
 				'post_title'     => $translation->get_target_title(),
 				'permalink'      => $url,

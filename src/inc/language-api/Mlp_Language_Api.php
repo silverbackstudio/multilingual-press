@@ -71,8 +71,8 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		$this->site_relations    = $site_relations;
 		$this->content_relations = $content_relations;
 
-		add_action( 'wp_loaded', array ( $this, 'load_language_manager' ) );
-		add_filter( 'mlp_language_api', array ( $this, 'get_instance' ) );
+		add_action( 'wp_loaded', array( $this, 'load_language_manager' ) );
+		add_filter( 'mlp_language_api', array( $this, 'get_instance' ) );
 	}
 
 	/**
@@ -128,7 +128,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		}
 
 		if ( ! is_array( $languages ) )
-			return array ();
+			return [];
 
 		foreach ( $languages as $site_id => $language_data ) {
 
@@ -216,7 +216,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		);
 
 		if ( empty ( $sites ) )
-			return array ();
+			return [];
 
 		if ( ! empty ( $arguments[ 'content_id' ] ) ) {
 
@@ -228,7 +228,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			);
 
 			if ( empty ( $content_relations ) && $arguments[ 'strict' ] )
-				return array ();
+				return [];
 		}
 
 		$translations      = [];
@@ -239,7 +239,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			if ( ! isset ( $languages[ $site_id ] ) )
 				continue;
 
-			$translations[ $site_id ] = array (
+			$translations[ $site_id ] = array(
 				'source_site_id'    => $arguments[ 'site_id' ],
 				'target_site_id'    => $site_id,
 				'type'              => $arguments[ 'type' ],
@@ -366,7 +366,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	 */
 	public function get_post_type_archive_translation( $post_type ) {
 
-		$return = array ();
+		$return = [];
 
 		$url                    = get_post_type_archive_link( $post_type );
 		$return[ 'target_url' ] = Mlp_Url_Factory::create( $url );
@@ -401,7 +401,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 			if ( ! $editable )
 				return FALSE;
 
-			return array (
+			return array(
 				'target_title' => $title,
 				'target_url'   => Mlp_Url_Factory::create( get_edit_post_link( $content_id ) )
 			);
@@ -413,7 +413,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		do_action( 'mlp_after_link' );
 
 		if ( 'publish' === $post->post_status || $editable )
-			return array (
+			return array(
 				'target_title' => $title,
 				'target_url'   => empty ( $url ) ? '' : Mlp_Url_Factory::create( $url )
 			);
@@ -422,7 +422,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		if ( $strict )
 			return FALSE;
 
-		return array (
+		return array(
 			'target_title' => $title,
 			'target_url'   => ''
 		);
@@ -469,8 +469,8 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		if ( empty ( $languages ) )
 			return [];
 
-		$tags     = array ();
-		$add_like = array ();
+		$tags     = [];
+		$add_like = [];
 
 		foreach ( $languages as $site_id => $data ) {
 			if ( ! empty ( $data[ 'lang' ] ) )
@@ -553,10 +553,10 @@ WHERE `http_name` IN( $values )";
 	 */
 	private function get_request_type() {
 
-		$checks = array (
+		$checks = array(
 			'admin'             => 'is_admin',
-			'post'              => array ( $this, 'is_singular' ),
-			'term'              => array (
+			'post'              => array( $this, 'is_singular' ),
+			'term'              => array(
 				$this,
 				'is_term_archive_request'
 			),

@@ -47,7 +47,7 @@ else if ( WP_UNINSTALL_PLUGIN === 'multilingual-press-pro/multilingual-press.php
  */
 global $wpdb;
 
-foreach ( array ( 'mlp_languages', 'multilingual_linked', 'mlp_site_relations' ) as $table )
+foreach ( array( 'mlp_languages', 'multilingual_linked', 'mlp_site_relations' ) as $table )
 	$wpdb->query( "DROP TABLE IF EXISTS " . $wpdb->base_prefix . $table );
 
 

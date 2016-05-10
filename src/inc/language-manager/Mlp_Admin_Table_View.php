@@ -222,7 +222,7 @@ class Mlp_Admin_Table_View {
 	 */
 	private function prepare_input_data( $id, $col, $value, $attributes ) {
 
-		return array (
+		return array(
 			$this->get_input_name( $id, $col ),
 			$this->html->array_to_attrs( $attributes ),
 			$value

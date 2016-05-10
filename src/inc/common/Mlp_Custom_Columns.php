@@ -15,7 +15,7 @@ class Mlp_Custom_Columns {
 	 *
 	 * @type array
 	 */
-	protected $settings = array ();
+	protected $settings = [];
 
 	/**
 	 * Constructor

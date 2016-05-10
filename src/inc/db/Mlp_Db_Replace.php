@@ -81,7 +81,7 @@ class Mlp_Db_Replace {
 	 */
 	private function get_replacement_sql( Array $columns, $search, $replacement ) {
 
-		$rows = array ();
+		$rows = [];
 
 		foreach ( $columns as $column ) {
 			if ( ! $this->is_valid_column_name( $column ) ) {

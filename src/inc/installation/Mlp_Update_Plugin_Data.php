@@ -67,13 +67,13 @@ class Mlp_Update_Plugin_Data {
 	public function update( Mlp_Network_Plugin_Deactivation_Interface $deactivator ) {
 
 		$deactivator->deactivate(
-			array (
+			array(
 				'disable-acf.php',
 				'mlp-wp-seo-compat.php'
 			)
 		);
 		// add hook to import active languages when reset is done
-		add_action( 'mlp_reset_table_done', array ( $this, 'import_active_languages' ) );
+		add_action( 'mlp_reset_table_done', array( $this, 'import_active_languages' ) );
 
 		// The site option with the version number exists since 2.0. If the last
 		// version is a fallback, it is a version below 2.0.
@@ -179,7 +179,7 @@ class Mlp_Update_Plugin_Data {
 				// @todo add custom name
 				$this->wpdb->insert(
 					$table,
-				   array (
+				   array(
 					   'english_name' => $text,
 					   'wp_locale'    => $mlp_site[ 'lang' ],
 					   'http_name'    => str_replace( '_', '-', $mlp_site[ 'lang' ] )
@@ -190,8 +190,8 @@ class Mlp_Update_Plugin_Data {
 			else {
 				$this->wpdb->update(
 					$table,
-					array ( 'priority' => 10 ),
-					array ( 'ID'       => $lang_id )
+					array( 'priority' => 10 ),
+					array( 'ID'       => $lang_id )
 				);
 			}
 		}

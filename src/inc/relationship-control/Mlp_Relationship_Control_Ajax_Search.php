@@ -110,7 +110,7 @@ class Mlp_Relationship_Control_Ajax_Search {
 	 */
 	private function prepare_titles( Array $posts ) {
 
-		$out = $titles = $duplicates = array ();
+		$out = $titles = $duplicates = [];
 
 		/** @var WP_Post $post */
 		foreach ( $posts as $post ) {

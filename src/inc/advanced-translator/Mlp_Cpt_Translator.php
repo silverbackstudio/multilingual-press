@@ -51,7 +51,7 @@ class Mlp_Cpt_Translator implements Mlp_Updatable {
 		if ( ! $this->register_setting() )
 			return;
 
-		add_filter( 'mlp_allowed_post_types', array ( $this, 'filter_allowed_post_types' ) );
+		add_filter( 'mlp_allowed_post_types', array( $this, 'filter_allowed_post_types' ) );
 
 		add_action( 'mlp_modules_add_fields', array( $this, 'draw_options_page_form_fields' ) );
 		// Use this hook to handle the user input of your modules' options page form fields
@@ -230,7 +230,7 @@ class Mlp_Cpt_Translator implements Mlp_Updatable {
 	public function get_active_post_types() {
 
 		$options = get_site_option( 'inpsyde_multilingual_cpt' );
-		$out     = array ();
+		$out     = [];
 
 		if ( empty ( $options ) or empty ( $options[ 'post_types' ] ) )
 			return $out;
@@ -316,7 +316,7 @@ class Mlp_Cpt_Translator implements Mlp_Updatable {
 			$post_link = add_query_arg( $post_type->query_var, $post->post_name, '' );
 		else
 			$post_link = add_query_arg(
-				array ( 'post_type' => $post->post_type, 'p' => $post->ID ),
+				array( 'post_type' => $post->post_type, 'p' => $post->ID ),
 				''
 			);
 
