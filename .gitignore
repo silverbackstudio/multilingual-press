@@ -12,7 +12,6 @@
 
 # Composer
 vendor
-composer.lock
 
 # Node
 node_modules
@@ -23,8 +22,10 @@ node_modules
 # PHPUnit
 phpunit.xml
 
-# GitHub release archive
-/*.zip
+# Generated plugin assets
+/assets/
+/svn-assets/
+/MultilingualPress.zip
 
 # This should stay at the bottom
 !.gitkeep
