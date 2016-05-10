@@ -55,7 +55,7 @@ an existing WPML multilingual site via XLIFF export/import for MultilingualPress
 ## Installation
 ### Requirements
 * WordPress multisite 4.2+.
-* PHP 5.2.4, newer PHP versions will work faster.
+* PHP 5.4.0, newer PHP versions will work faster.
 
 If you're new to WordPress multisite, you might find our [WordPress multisite installation
 tutorial](https://marketpress.com/2015/wordpress-multisite-installation/) helpful.
