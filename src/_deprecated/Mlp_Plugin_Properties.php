@@ -2,6 +2,8 @@
 
 use Inpsyde\MultilingualPress\Common\Properties;
 
+_deprecated_file( 'Mlp_Plugin_Properties', '3.0.0', 'Inpsyde\MultilingualPress\Core\PluginProperties' );
+
 class Mlp_Plugin_Properties extends Inpsyde\MultilingualPress\Core\PluginProperties {
 
 	/**
