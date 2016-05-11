@@ -403,8 +403,10 @@ module.exports = function( grunt ) {
 		 */
 		zip: {
 			release: {
+				// TODO: Take care of autoloading, once we decided which route to go!
 				src: [
 					'*.{php,txt}',
+					'assets/**',
 					'languages/**',
 					'<%= config.src %>**/*.php'
 				],
