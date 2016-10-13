@@ -1,8 +1,8 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\Type\EscapedURL;
 use Inpsyde\MultilingualPress\Common\Type\Setting;
 use Inpsyde\MultilingualPress\Common\Type\URL;
+use Inpsyde\MultilingualPress\Factory\TypeFactory;
 
 /**
  * Class Mlp_Language_Manager_Options_Page_Data
@@ -19,11 +19,19 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 	private $page_title;
 
 	/**
-	 * @param string $page_title
+	 * @var TypeFactory
 	 */
-	public function __construct( $page_title ) {
+	private $type_factory;
+
+	/**
+	 * @param string      $page_title
+	 * @param TypeFactory $type_factory Type factory object.
+	 */
+	public function __construct( $page_title, TypeFactory $type_factory ) {
 
 		$this->page_title = (string) $page_title;
+
+		$this->type_factory = $type_factory;
 	}
 
 	/**
@@ -33,7 +41,7 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 	 *
 	 * @return string Action name.
 	 */
-	public function get_action() {
+	public function action() {
 
 		return 'mlp_update_languages';
 	}
@@ -45,7 +53,7 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 	 *
 	 * @return string Nonce name.
 	 */
-	public function get_nonce_name() {
+	public function nonce_name() {
 
 		return 'mlp_language_table_nonce';
 	}
@@ -57,7 +65,7 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 	 *
 	 * @return string Setting title.
 	 */
-	public function get_title() {
+	public function title() {
 
 		return $this->page_title;
 	}
@@ -69,9 +77,11 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 	 *
 	 * @return URL URL to submit updates to.
 	 */
-	public function get_url() {
+	public function url() {
 
-		return EscapedURL::create( admin_url( 'admin-post.php' ) );
+		return $this->type_factory->create_url( [
+			admin_url( 'admin-post.php' ),
+		] );
 	}
 
 	/**
@@ -89,7 +99,7 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 			'Inpsyde\MultilingualPress\Common\Type\Mlp_Language_Manager_Options_Page_Data::get_action'
 		);
 
-		return $this->get_action();
+		return $this->action();
 	}
 
 	/**
@@ -107,7 +117,7 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 			'(string) Inpsyde\MultilingualPress\Common\Type\Mlp_Language_Manager_Options_Page_Data::get_url'
 		);
 
-		return (string) $this->get_url();
+		return (string) $this->url();
 	}
 
 	/**
@@ -125,6 +135,6 @@ class Mlp_Language_Manager_Options_Page_Data implements Setting {
 			'Inpsyde\MultilingualPress\Common\Type\Mlp_Language_Manager_Options_Page_Data::get_action'
 		);
 
-		return $this->get_action();
+		return $this->action();
 	}
 }

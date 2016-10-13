@@ -1,16 +1,15 @@
 <?php # -*- coding: utf-8 -*-
 
-// TODO: With WordPress 4.6 + 2, deprecate `insert_asset_instance()` and `register()`, and construcotr-inject `$assets`.
+use Inpsyde\MultilingualPress\MultilingualPress;
+
+// TODO: Refactor as soon as using a custom template renderer has been discussed.
+
+// TODO: With WordPress 4.6 + 2, deprecate `widget_register()`, and constructor-inject `$asset_manager`.
 
 /**
  * Language Switcher widget.
  */
 class Mlp_Widget extends WP_Widget {
-
-	/**
-	 * @var Mlp_Assets_Interface
-	 */
-	private static $assets;
 
 	/**
 	 * Constructor. Sets up the properties.
@@ -41,18 +40,6 @@ class Mlp_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Sets the assets manager.
-	 *
-	 * @param Mlp_Assets_Interface $assets Assets.
-	 *
-	 * @return void
-	 */
-	public static function insert_asset_instance( Mlp_Assets_Interface $assets ) {
-
-		self::$assets = $assets;
-	}
-
-	/**
 	 * Enqueues the frontend styles.
 	 *
 	 * @wp-hook template_redirect
@@ -66,7 +53,9 @@ class Mlp_Widget extends WP_Widget {
 			return false;
 		}
 
-		return self::$assets->provide( 'mlp_frontend_css' );
+		MultilingualPress::resolve( 'multilingualpress.asset_manager' )->enqueue_style( 'multilingualpress' );
+
+		return true;
 	}
 
 	/**
@@ -77,8 +66,6 @@ class Mlp_Widget extends WP_Widget {
 	 * @return void
 	 */
 	public function form( $instance ) {
-
-		$instance = $this->adapt_settings( $instance );
 
 		$title = isset( $instance['widget_title'] ) ? $instance['widget_title'] : '';
 
@@ -220,8 +207,6 @@ class Mlp_Widget extends WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 
-		$instance = $this->adapt_settings( $instance );
-
 		$output = Mlp_Helpers::show_linked_elements( [
 			'link_text'         => empty( $instance['widget_link_type'] ) ? 'text' : $instance['widget_link_type'],
 			'show_current_blog' => ! empty( $instance['widget_show_current_blog'] ),
@@ -248,55 +233,5 @@ class Mlp_Widget extends WP_Widget {
 		echo $output;
 
 		echo $args['after_widget'];
-	}
-
-	/**
-	 * Adapts the internal settings to changes introduced in MultilingualPress 2.2.0.
-	 *
-	 * @see  https://github.com/inpsyde/multilingual-press/issues/112
-	 *
-	 * @todo Eventually remove this, with version 2.2.0 + 4 at the earliest.
-	 *
-	 * @param array $instance Widget settings.
-	 *
-	 * @return array
-	 */
-	private function adapt_settings( array $instance ) {
-
-		$settings = $this->get_settings();
-
-		if ( empty( $settings[ $this->number ] ) ) {
-			// This should not happen (if it does, there's something wrong with WP_Widget).
-			return $instance;
-		}
-
-		$instance = $settings[ $this->number ];
-
-		if ( empty( $instance['widget_link_type'] ) ) {
-			// No need to adapt anything.
-			return $instance;
-		}
-
-		switch ( $instance['widget_link_type'] ) {
-			case 'text_flag':
-				$instance['widget_link_type']    = 'native';
-				$instance['widget_display_flag'] = true;
-				break;
-
-			case 'flag':
-				$instance['widget_link_type']    = 'none';
-				$instance['widget_display_flag'] = true;
-				break;
-
-			default:
-				// No need to adapt anything.
-				return $instance;
-		}
-
-		$settings[ $this->number ] = $instance;
-
-		$this->save_settings( $settings );
-
-		return $instance;
 	}
 }

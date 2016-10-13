@@ -1,4 +1,8 @@
 <?php # -*- coding: utf-8 -*-
+
+use Inpsyde\MultilingualPress\API\SiteRelations;
+use Inpsyde\MultilingualPress\Common\Admin\AdminNotice;
+
 /**
  * Class Mlp_Network_Site_Settings_Controller
  *
@@ -37,13 +41,13 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	public function __construct( Inpsyde_Property_List_Interface $plugin_data ) {
 
 		$this->plugin_data = $plugin_data;
-		$this->setting = new Mlp_Network_Site_Settings_Tab_Data;
-		$this->page_properties = new Mlp_Network_Site_Settings_Properties( $plugin_data );
+		$this->setting = new Mlp_Network_Site_Settings_Tab_Data( $plugin_data->get( 'type_factory' ) );
+		$this->page_properties = new Mlp_Network_Site_Settings_Properties();
 
 		new Mlp_Network_Site_Settings( $this->page_properties, $this );
 
 		add_action(
-			'admin_post_' . $this->setting->get_action(),
+			'admin_post_' . $this->setting->action(),
 			[ $this, 'update_settings' ]
 		);
 
@@ -71,7 +75,8 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 * @return void
 	 */
 	public function enqueue_stylesheet() {
-		wp_enqueue_style( 'mlp-admin-css' );
+
+		$this->plugin_data->get( 'assets' )->enqueue_style( 'multilingualpress-admin' );
 	}
 
 	/**
@@ -81,7 +86,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 */
 	public function update_settings() {
 
-		if ( ! check_admin_referer( $this->setting->get_action(), $this->setting->get_nonce_name() ) )
+		if ( ! check_admin_referer( $this->setting->action(), $this->setting->nonce_name() ) )
 			wp_die( 'Invalid', 'Invalid', [ 'response' => 403 ] );
 
 		$blog_id = $this->get_blog_id();
@@ -150,11 +155,11 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 */
 	private function update_related_blogs( $blog_id ) {
 
-		/** @var Mlp_Site_Relations_Interface $relations */
+		/** @var SiteRelations $relations */
 		$relations   = $this->plugin_data->get( 'site_relations' );
 		$changed     = 0;
 		$new_related = $this->get_new_related_blogs();
-		$old_related = $relations->get_related_sites( $blog_id, FALSE );
+		$old_related = $relations->get_related_site_ids( $blog_id, FALSE );
 
 		// All relations removed.
 		if ( empty ( $new_related ) && ! empty ( $old_related ) )
@@ -163,7 +168,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 		$add_ids = $this->get_new_relations( $new_related, $old_related );
 
 		if ( ! empty ( $add_ids ) )
-			$changed += $relations->set_relation( $blog_id, $add_ids );
+			$changed += $relations->insert_relations( $blog_id, $add_ids );
 
 		if ( ! empty ( $old_related ) )
 			$changed += $this->delete_unset_relations( $blog_id, $old_related, $new_related, $relations, $changed );
@@ -210,9 +215,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 		if ( empty ( $_GET[ 'msg' ] ) or 'updated' !== $_GET[ 'msg' ] )
 			return;
 
-		$msg    = esc_html__( 'Settings saved.', 'multilingual-press' );
-		$notice = new Mlp_Admin_Notice( $msg, [ 'class' => 'updated' ] );
-		$notice->show();
+		( new AdminNotice( '<p>' . __( 'Settings saved.', 'multilingual-press' ) . '</p>' ) )->render();
 	}
 
 	/**
@@ -257,7 +260,7 @@ class Mlp_Network_Site_Settings_Controller implements Mlp_Updatable {
 	 * @param $changed
 	 * @return int
 	 */
-	private function delete_unset_relations( $blog_id, $old_related, $new_related, Mlp_Site_Relations_Interface $relations, $changed ) {
+	private function delete_unset_relations( $blog_id, $old_related, $new_related, SiteRelations $relations, $changed ) {
 
 		// Delete removed relations.
 		foreach ( $old_related as $old_blog_id ) {

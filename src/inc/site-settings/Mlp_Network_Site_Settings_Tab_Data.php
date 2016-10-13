@@ -1,8 +1,8 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\Type\EscapedURL;
 use Inpsyde\MultilingualPress\Common\Type\Setting;
 use Inpsyde\MultilingualPress\Common\Type\URL;
+use Inpsyde\MultilingualPress\Factory\TypeFactory;
 
 /**
  * Class Mlp_Network_Site_Settings_Tab_Data
@@ -14,13 +14,26 @@ use Inpsyde\MultilingualPress\Common\Type\URL;
 class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 
 	/**
+	 * @var TypeFactory
+	 */
+	private $type_factory;
+
+	/**
+	 * @param TypeFactory $type_factory Type factory object.
+	 */
+	public function __construct( TypeFactory $type_factory ) {
+
+		$this->type_factory = $type_factory;
+	}
+
+	/**
 	 * Returns the action name for the setting.
 	 *
 	 * @since 3.0.0
 	 *
 	 * @return string Action name.
 	 */
-	public function get_action() {
+	public function action() {
 
 		return 'mlp_network_site_settings';
 	}
@@ -32,7 +45,7 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 	 *
 	 * @return string Nonce name.
 	 */
-	public function get_nonce_name() {
+	public function nonce_name() {
 
 		return 'mlp_network_site_settings_nonce';
 	}
@@ -44,7 +57,7 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 	 *
 	 * @return string Setting title.
 	 */
-	public function get_title() {
+	public function title() {
 
 		return '';
 	}
@@ -56,9 +69,11 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 	 *
 	 * @return URL URL to submit updates to.
 	 */
-	public function get_url() {
+	public function url() {
 
-		return EscapedURL::create( admin_url( 'admin-post.php' ) );
+		return $this->type_factory->create_url( [
+			admin_url( 'admin-post.php' ),
+		] );
 	}
 
 	/**
@@ -76,7 +91,7 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 			'Mlp_Network_Site_Settings_Tab_Data::get_action'
 		);
 
-		return $this->get_action();
+		return $this->action();
 	}
 
 	/**
@@ -94,7 +109,7 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 			'(string) Mlp_Network_Site_Settings_Tab_Data::get_url'
 		);
 
-		return (string) $this->get_url();
+		return (string) $this->url();
 	}
 
 	/**
@@ -112,6 +127,6 @@ class Mlp_Network_Site_Settings_Tab_Data implements Setting {
 			'Mlp_Network_Site_Settings_Tab_Data::get_action'
 		);
 
-		return $this->get_action();
+		return $this->action();
 	}
 }

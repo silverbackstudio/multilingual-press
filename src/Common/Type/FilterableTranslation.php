@@ -8,7 +8,7 @@ namespace Inpsyde\MultilingualPress\Common\Type;
  * @package Inpsyde\MultilingualPress\Common\Type
  * @since   3.0.0
  */
-class FilterableTranslation implements Translation {
+final class FilterableTranslation implements Translation {
 
 	/**
 	 * @var URL
@@ -67,15 +67,11 @@ class FilterableTranslation implements Translation {
 
 		// TODO: Passing all the (different) stuff via an array really should be improved! Use fluent setters instead?!
 
-		$this->icon_url = ( $args['icon_url'] instanceof URL )
-			? $args['icon_url']
-			: EscapedURL::create( '' );
+		$this->icon_url = $args['icon_url'];
 
 		$this->remote_title = (string) $args['remote_title'];
 
-		$this->remote_url = ( $args['remote_url'] instanceof URL )
-			? $args['remote_url']
-			: EscapedURL::create( '' );
+		$this->remote_url = $args['remote_url'];
 
 		$this->source_site_id = (int) $args['source_site_id'];
 
@@ -97,7 +93,7 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return URL Icon URL object.
 	 */
-	public function get_icon_url() {
+	public function icon_url() {
 
 		return $this->icon_url;
 	}
@@ -109,21 +105,9 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return Language Language object.
 	 */
-	public function get_language() {
+	public function language() {
 
 		return $this->language;
-	}
-
-	/**
-	 * Returns the content type.
-	 *
-	 * @since 3.0.0
-	 *
-	 * @return string Content type.
-	 */
-	public function get_type() {
-
-		return $this->type;
 	}
 
 	/**
@@ -133,7 +117,7 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return string Remote title.
 	 */
-	public function get_remote_title() {
+	public function remote_title() {
 
 		return $this->remote_title;
 	}
@@ -145,17 +129,16 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return string Remote URL.
 	 */
-	public function get_remote_url() {
+	public function remote_url() {
 
 		if ( $this->suppress_filters ) {
 			return (string) $this->remote_url;
 		}
 
 		/**
-		 * Filters the remote URL of the linked element.
+		 * Filters the URL of the remote element.
 		 *
-		 * @since 1.0.3
-		 * @since 2.2.0 Added the `$translation` argument.
+		 * @since 3.0.0
 		 *
 		 * @param string      $remote_url        URL of the remote element.
 		 * @param int         $target_site_id    ID of the target site.
@@ -163,10 +146,10 @@ class FilterableTranslation implements Translation {
 		 * @param Translation $translation       Translation object.
 		 */
 		$remote_url = (string) apply_filters(
-			'mlp_linked_element_link',
+			'multilingualpress.translation_url',
 			(string) $this->remote_url,
-			$this->get_target_site_id(),
-			$this->get_target_content_id(),
+			$this->target_site_id(),
+			$this->target_content_id(),
 			$this
 		);
 
@@ -180,7 +163,7 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return int Source site ID.
 	 */
-	public function get_source_site_id() {
+	public function source_site_id() {
 
 		return $this->source_site_id;
 	}
@@ -192,7 +175,7 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return int Target content ID.
 	 */
-	public function get_target_content_id() {
+	public function target_content_id() {
 
 		return $this->target_content_id;
 	}
@@ -204,40 +187,20 @@ class FilterableTranslation implements Translation {
 	 *
 	 * @return int Target site ID.
 	 */
-	public function get_target_site_id() {
+	public function target_site_id() {
 
 		return $this->target_site_id;
 	}
 
 	/**
-	 * @deprecated 3.0.0 Deprecated in favor of {@see FilterableTranslation::get_type}.
+	 * Returns the content type.
 	 *
-	 * @return string
-	 */
-	public function get_page_type() {
-
-		_deprecated_function(
-			__METHOD__,
-			'3.0.0',
-			'Inpsyde\MultilingualPress\Common\Type\FilterableTranslation::get_type'
-		);
-
-		return $this->get_type();
-	}
-
-	/**
-	 * @deprecated 3.0.0 Deprecated in favor of {@see FilterableTranslation::get_remote_title}.
+	 * @since 3.0.0
 	 *
-	 * @return string
+	 * @return string Content type.
 	 */
-	public function get_target_title() {
+	public function type() {
 
-		_deprecated_function(
-			__METHOD__,
-			'3.0.0',
-			'Inpsyde\MultilingualPress\Common\Type\FilterableTranslation::get_remote_title'
-		);
-
-		return $this->get_remote_title();
+		return $this->type;
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace Inpsyde\MultilingualPress\Module\Redirect\LanguageNegotiation;
 
-use Inpsyde\MultilingualPress\Common\AcceptHeader\Parser;
+use Inpsyde\MultilingualPress\Common\AcceptHeader\AcceptHeaderParser;
 
 /**
  * Parser for Accept-Language headers, sorting by priority.
@@ -10,7 +10,7 @@ use Inpsyde\MultilingualPress\Common\AcceptHeader\Parser;
  * @package Inpsyde\MultilingualPress\Module\Redirect\LanguageNegotiation
  * @since   3.0.0
  */
-class AcceptLanguageParser implements Parser {
+final class AcceptLanguageParser implements AcceptHeaderParser {
 
 	/**
 	 * Parses the given Accept header and returns the according data in array form.
@@ -21,46 +21,24 @@ class AcceptLanguageParser implements Parser {
 	 *
 	 * @return array Parsed Accept header in array form.
 	 */
-	public function parse_header( $header ) {
+	public function parse( $header ) {
 
 		$header = $this->remove_comment( $header );
 		if ( '' === $header ) {
 			return [];
 		}
 
-		$data = [];
+		return array_reduce( $this->get_values( $header ), function ( array $values, $value ) {
 
-		$values = $this->get_values( $header );
-		foreach ( $values as $value ) {
 			$split_values = $this->split_value( $value );
-			if ( ! $split_values ) {
-				continue;
+			if ( $split_values ) {
+				list( $language, $priority ) = $split_values;
+
+				$values[ $language ] = $priority;
 			}
 
-			list( $language, $priority ) = $split_values;
-
-			$data[ $language ] = $priority;
-		}
-
-		return $data;
-	}
-
-	/**
-	 * @deprecated 3.0.0 Deprecated in favor of {@see AcceptLanguageParser::parse_header}.
-	 *
-	 * @param string $header
-	 *
-	 * @return array
-	 */
-	public function parse( $header ) {
-
-		_deprecated_function(
-			__METHOD__,
-			'3.0.0',
-			'Inpsyde\MultilingualPress\Module\Redirect\LanguageNegotiation\AcceptLanguageParser::parse_header'
-		);
-
-		return $this->parse_header( $header );
+			return $values;
+		}, [] );
 	}
 
 	/**
@@ -115,7 +93,7 @@ class AcceptLanguageParser implements Parser {
 	private function split_value( $value ) {
 
 		$language = strtok( $value, ';' );
-		if ( ! $this->validate_language( $language ) ) {
+		if ( ! preg_match( '~[a-zA-Z_-]~', $language ) ) {
 			return [];
 		}
 
@@ -129,18 +107,6 @@ class AcceptLanguageParser implements Parser {
 		$priority = $this->normalize_priority( $priority );
 
 		return [ $language, $priority ];
-	}
-
-	/**
-	 * Checks if the given HTTP language code is valid.
-	 *
-	 * @param string $language HTTP language code.
-	 *
-	 * @return bool Whether or not the given HTTP language code is valid.
-	 */
-	private function validate_language( $language ) {
-
-		return (bool) preg_match( '~[a-zA-Z_-]~', $language );
 	}
 
 	/**

@@ -1,10 +1,10 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\Type\AliasAwareLanguage;
-use Inpsyde\MultilingualPress\Common\Type\EscapedURL;
-use Inpsyde\MultilingualPress\Common\Type\FilterableTranslation;
+use Inpsyde\MultilingualPress\API\ContentRelations;
+use Inpsyde\MultilingualPress\API\SiteRelations;
 use Inpsyde\MultilingualPress\Common\Type\Translation;
 use Inpsyde\MultilingualPress\Common\Type\URL;
+use Inpsyde\MultilingualPress\Factory\TypeFactory;
 
 /**
  * Class Mlp_Language_Api
@@ -35,7 +35,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	private $table_name;
 
 	/**
-	 *@var Mlp_Site_Relations_Interface
+	 *@var SiteRelations
 	 */
 	private $site_relations;
 
@@ -45,7 +45,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	private $wpdb;
 
 	/**
-	 * @var Mlp_Content_Relations_Interface
+	 * @var ContentRelations
 	 */
 	private $content_relations;
 
@@ -55,21 +55,29 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 	private $language_data_from_db = [];
 
 	/**
+	 * @var TypeFactory
+	 */
+	private $type_factory;
+
+	/**
 	 * Constructor.
 	 *
 	 * @wp-hook plugins_loaded
+	 *
 	 * @param   Inpsyde_Property_List_Interface $data
 	 * @param   string                          $table_name
-	 * @param   Mlp_Site_Relations_Interface    $site_relations
-	 * @param   Mlp_Content_Relations_Interface $content_relations
+	 * @param   SiteRelations    $site_relations
+	 * @param   ContentRelations $content_relations
 	 * @param   wpdb                            $wpdb
+	 * @param   TypeFactory                     $type_factory      Type factory object.
 	 */
 	public function __construct(
 		Inpsyde_Property_List_Interface $data,
 		$table_name,
-		Mlp_Site_Relations_Interface    $site_relations,
-		Mlp_Content_Relations_Interface $content_relations,
-		wpdb                            $wpdb
+		SiteRelations    $site_relations,
+		ContentRelations $content_relations,
+		wpdb                            $wpdb,
+		TypeFactory                     $type_factory
 	) {
 		$this->data              = $data;
 		$this->wpdb              = $wpdb;
@@ -77,6 +85,7 @@ class Mlp_Language_Api implements Mlp_Language_Api_Interface {
 		$this->table_name        = $this->wpdb->base_prefix . $table_name;
 		$this->site_relations    = $site_relations;
 		$this->content_relations = $content_relations;
+		$this->type_factory = $type_factory;
 
 		add_action( 'wp_loaded', [ $this, 'load_language_manager' ] );
 		add_filter( 'mlp_language_api', [ $this, 'get_instance' ] );
@@ -284,7 +293,7 @@ LIMIT 1";
 
 				if ( 'term' === $arguments[ 'type' ] ) {
 
-					$term_translation = new Mlp_Term_Translation( $this->wpdb, $wp_rewrite );
+					$term_translation = new Mlp_Term_Translation( $this->wpdb, $wp_rewrite, $this->type_factory );
 					$translation      = $term_translation->get_translation( $content_id, $site_id );
 
 					if ( ! $translation )
@@ -314,7 +323,9 @@ LIMIT 1";
 				switch_to_blog( $site_id );
 
 				if ( 'search' === $arguments[ 'type' ] ) {
-					$arr['remote_url'] = EscapedURL::create( get_search_link( $arguments['search_term'] ) );
+					$arr['remote_url'] = $this->type_factory->create_url( [
+						get_search_link( $arguments['search_term'] ),
+					] );
 				}
 				elseif ( 'post_type_archive' === $arguments[ 'type' ]
 					&& ! empty ( $arguments[ 'post_type' ] )
@@ -330,7 +341,9 @@ LIMIT 1";
 				if ( ( empty ( $arr[ 'remote_url' ] ) && ! $arguments[ 'strict' ] )
 					|| 'front_page' === $arguments[ 'type' ]
 				) {
-					$arr[ 'remote_url' ] = EscapedURL::create( get_site_url( $site_id, '/' ) );
+					$arr[ 'remote_url' ] = $this->type_factory->create_url( [
+						get_site_url( $site_id, '/' ),
+					] );
 				}
 
 				if ( empty ( $arr[ 'remote_url' ] ) )
@@ -359,12 +372,19 @@ LIMIT 1";
 					$site_id
 				);
 			} else {
-				$arr[ 'icon_url' ] = EscapedURL::create( '' );
+				$arr[ 'icon_url' ] = $this->type_factory->create_url( [
+					'',
+				] );
 			}
 
 			$arr['suppress_filters'] = $arguments['suppress_filters'];
 
-			$arr = new FilterableTranslation( $arr, AliasAwareLanguage::create( $data ) );
+			$arr = $this->type_factory->create_translation( [
+				$arr,
+				$this->type_factory->create_language( [
+					$data,
+				] ),
+			] );
 		}
 
 		/**
@@ -389,14 +409,16 @@ LIMIT 1";
 	 */
 	public function get_post_type_archive_translation( $post_type ) {
 
-		$return = [];
+		$return = [
+			'remote_url' => $this->type_factory->create_url( [
+				get_post_type_archive_link( $post_type ),
+			] ),
+		];
 
-		$url                    = get_post_type_archive_link( $post_type );
-		$return[ 'remote_url' ] = EscapedURL::create( $url );
-		$obj                    = get_post_type_object( $post_type );
-
-		if ( $obj )
-			$return[ 'remote_title' ] = $obj->labels->name;
+		$post_type_object = get_post_type_object( $post_type );
+		if ( $post_type_object ) {
+			$return['remote_title'] = $post_type_object->labels->name;
+		}
 
 		return $return;
 	}
@@ -426,7 +448,9 @@ LIMIT 1";
 
 			return [
 				'remote_title' => $title,
-				'remote_url'   => EscapedURL::create( get_edit_post_link( $content_id ) )
+				'remote_url'   => $this->type_factory->create_url( [
+					get_edit_post_link( $content_id ),
+				] ),
 			];
 		}
 
@@ -438,7 +462,9 @@ LIMIT 1";
 		if ( 'publish' === $post->post_status || $editable )
 			return [
 				'remote_title' => $title,
-				'remote_url'   => empty ( $url ) ? '' : EscapedURL::create( $url )
+				'remote_url'   => $this->type_factory->create_url( [
+					$url ?: '',
+				] ),
 			];
 
 		// unpublished post, not editable
@@ -463,7 +489,9 @@ LIMIT 1";
 
 		$custom_flag = get_blog_option( $site_id, 'inpsyde_multilingual_flag_url' );
 		if ( $custom_flag ) {
-			return EscapedURL::create( $custom_flag );
+			return $this->type_factory->create_url( [
+				$custom_flag,
+			] );
 		}
 
 		$flag_path = $this->data->get( 'flag_path' );
@@ -473,10 +501,14 @@ LIMIT 1";
 		$file_name = $sub . '.gif';
 
 		if ( is_readable( "$flag_path/$file_name" ) ) {
-			return EscapedURL::create( $this->data->get( 'flag_url' ) . $file_name );
+			return $this->type_factory->create_url( [
+				$this->data->get( 'flag_url' ) . $file_name,
+			] );
 		}
 
-		return EscapedURL::create( '' );
+		return $this->type_factory->create_url( [
+			'',
+		] );
 	}
 
 	/**
@@ -597,12 +629,11 @@ WHERE `http_name` IN( $values )";
 		return '';
 	}
 
-	/**
+	/** @noinspection PhpUnusedPrivateMethodInspection
 	 * Check for regular singular pages and separate page for posts
 	 *
 	 * @return bool
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function is_singular() {
 
 		if ( is_singular() ) {
@@ -622,12 +653,9 @@ WHERE `http_name` IN( $values )";
 		return is_home() && ! is_front_page();
 	}
 
-	/**
-	 * @used-by get_request_type()
-	 * @see     get_request_type()
+	/** @noinspection PhpUnusedPrivateMethodInspection
 	 * @return  bool
 	 */
-	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function is_term_archive_request() {
 
 		$queried_object = get_queried_object();
@@ -648,7 +676,7 @@ WHERE `http_name` IN( $values )";
 		if ( empty ( $site_id ) )
 			$site_id = get_current_blog_id();
 
-		$sites = $this->site_relations->get_related_sites( $site_id );
+		$sites = $this->site_relations->get_related_site_ids( $site_id );
 
 		if ( empty ( $sites ) )
 			return [];

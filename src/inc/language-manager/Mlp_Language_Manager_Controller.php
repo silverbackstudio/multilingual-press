@@ -1,4 +1,9 @@
 <?php # -*- coding: utf-8 -*-
+
+use Inpsyde\MultilingualPress\Database\Table;
+use Inpsyde\MultilingualPress\Database\Table\LanguagesTable;
+use Inpsyde\MultilingualPress\Database\WPDBTableInstaller;
+
 /**
  * Class Mlp_Language_Manager_Controller
  *
@@ -73,7 +78,10 @@ class Mlp_Language_Manager_Controller implements Mlp_Updatable {
 		$this->page_title      = __( 'Language Manager', 'multilingual-press' );
 		$this->db              = $database;
 		$this->pagination_data = new Mlp_Language_Manager_Pagination_Data( $database );
-		$this->setting       = new Mlp_Language_Manager_Options_Page_Data( $this->page_title );
+		$this->setting       = new Mlp_Language_Manager_Options_Page_Data(
+			$this->page_title,
+			$this->plugin_data->get( 'type_factory' )
+		);
 		$this->view            = new Mlp_Language_Manager_Page_View(
 			$this->setting,
 			$this,
@@ -128,7 +136,7 @@ class Mlp_Language_Manager_Controller implements Mlp_Updatable {
 	public function enqueue_style() {
 
 		$assets = $this->plugin_data->get( 'assets' );
-		$assets->provide( 'mlp_admin_css' );
+		//$assets->provide( 'mlp_admin_css' );
 	}
 
 	/**
@@ -173,12 +181,12 @@ class Mlp_Language_Manager_Controller implements Mlp_Updatable {
 	private function get_reset_table_link() {
 
 		$request = remove_query_arg( 'msg', wp_unslash( $_SERVER['REQUEST_URI'] ) );
-		$nonce   = wp_create_nonce( $this->setting->get_action() );
+		$nonce   = wp_create_nonce( $this->setting->action() );
 		$url     = add_query_arg( [
-			'action'                           => $this->reset_action,
-			$this->setting->get_nonce_name() => $nonce,
-			'_wp_http_referer'                 => esc_attr( $request )
-		], (string) $this->setting->get_url() );
+			'action'                     => $this->reset_action,
+			$this->setting->nonce_name() => $nonce,
+			'_wp_http_referer'           => esc_attr( $request )
+		], (string) $this->setting->url() );
 		?>
 		<p>
 			<a href="<?php echo esc_url( $url ); ?>" class="delete submitdelete" style="color:red">
@@ -193,19 +201,22 @@ class Mlp_Language_Manager_Controller implements Mlp_Updatable {
 	 */
 	public function reset_table() {
 
-		check_admin_referer( $this->setting->get_action(), $this->setting->get_nonce_name() );
+		check_admin_referer( $this->setting->action(), $this->setting->nonce_name() );
 
-		$table_schema = new Mlp_Db_Languages_Schema( $this->wpdb );
-		$installer    = new Mlp_Db_Installer( $table_schema );
+		$table_prefix = $this->wpdb->base_prefix;
+
+		$table = new LanguagesTable( $table_prefix );
+
+		$installer = new WPDBTableInstaller( $table );
 		$installer->uninstall();
 		$installer->install();
 
 		/**
 		 * Runs after having reset the database table.
 		 *
-		 * @param Mlp_Db_Languages_Schema $table_schema Languages table schema.
+		 * @param Table $table Languages table object.
 		 */
-		do_action( 'mlp_reset_table_done', $table_schema );
+		do_action( 'mlp_reset_table_done', $table );
 
 		$url = add_query_arg( 'msg', 'resettable', $_REQUEST[ '_wp_http_referer' ] );
 		wp_safe_redirect( $url );
@@ -331,7 +342,6 @@ class Mlp_Language_Manager_Controller implements Mlp_Updatable {
 
 		$view = new Mlp_Admin_Table_View (
 			$this->db,
-			new Mlp_Html,
 			$this->pagination_data,
 			$this->get_columns(),
 			'mlp-language-manager-table',

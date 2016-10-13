@@ -1,5 +1,6 @@
 <?php # -*- coding: utf-8 -*-
 
+use Inpsyde\MultilingualPress\API\SiteRelations;
 use Inpsyde\MultilingualPress\Common\Type\Setting;
 
 /**
@@ -22,7 +23,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	private $language_api;
 
 	/**
-	 * @var Mlp_Site_Relations_Interface
+	 * @var SiteRelations
 	 */
 	private $relations;
 
@@ -37,13 +38,13 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	 * @param Mlp_Language_Api_Interface   $language_api Language API.
 	 * @param Setting                      $setting      Options page data.
 	 * @param int                          $blog_id      Blog ID
-	 * @param Mlp_Site_Relations_Interface $relations    Site relations.
+	 * @param SiteRelations $relations    Site relations.
 	 */
 	public function __construct(
 		Mlp_Language_Api_Interface $language_api,
 		Setting $setting,
 		$blog_id,
-		Mlp_Site_Relations_Interface $relations
+		SiteRelations $relations
 	) {
 
 		$this->language_api = $language_api;
@@ -62,13 +63,13 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	 */
 	public function render_content() {
 
-		$action = $this->setting->get_action();
+		$action = $this->setting->action();
 		?>
-		<form action="<?php echo $this->setting->get_url(); ?>" method="post">
+		<form action="<?php echo $this->setting->url(); ?>" method="post">
 			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>" />
 			<input type="hidden" name="id" value="<?php echo esc_attr($this->blog_id); ?>" />
 			<?php
-			wp_nonce_field( $action, $this->setting->get_nonce_name() );
+			wp_nonce_field( $action, $this->setting->nonce_name() );
 
 			$siteoption = get_site_option( 'inpsyde_multilingual', [] );
 			$languages  = $this->language_api->get_db()->get_items( [ 'page' => -1 ]  );
@@ -237,7 +238,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 					restore_current_blog();
 
 					// Get current settings
-					$related_blogs = $this->relations->get_related_sites( $this->blog_id );
+					$related_blogs = $this->relations->get_related_site_ids( $this->blog_id );
 					$checked       = checked( TRUE, in_array( $blog_id, $related_blogs ), FALSE );
 					$id            = 'related_blog_' . $blog_id;
 					?>
@@ -247,7 +248,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 								type="checkbox" name="related_blogs[]" value="<?php echo esc_attr( $blog_id ) ?>" />
 							<?php echo esc_html( $blog_name ); ?>
 							-
-							<?php echo esc_html( Mlp_Helpers::get_blog_language( $blog_id, false ) ); ?>
+							<?php echo esc_html( \Inpsyde\MultilingualPress\get_site_language( $blog_id, false ) ); ?>
 						</label>
 					</p>
 					<?php

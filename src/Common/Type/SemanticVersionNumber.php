@@ -9,7 +9,7 @@ namespace Inpsyde\MultilingualPress\Common\Type;
  * @see     http://semver.org/#semantic-versioning-specification-semver
  * @since   3.0.0
  */
-class SemanticVersionNumber implements VersionNumber {
+final class SemanticVersionNumber implements VersionNumber {
 
 	/**
 	 * @var string
@@ -31,20 +31,6 @@ class SemanticVersionNumber implements VersionNumber {
 		) {
 			$this->version = $this->get_semantic_version_number( (string) $version );
 		}
-	}
-
-	/**
-	 * Returns a new version number object for the given version source.
-	 *
-	 * @since 3.0.0
-	 *
-	 * @param mixed $version Version source.
-	 *
-	 * @return SemanticVersionNumber Version number object.
-	 */
-	public static function create( $version ) {
-
-		return new self( $version );
 	}
 
 	/**

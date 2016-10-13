@@ -1,6 +1,8 @@
 <?php
 
-use Inpsyde\MultilingualPress\Common\Factory\Error;
+use Inpsyde\MultilingualPress\Factory\Error;
+
+// TODO: Remove as soon as it's not needed anymore, which means that all classes use either $container or $properties.
 
 /**
  * Holds data about the plugin MultilingualPress
@@ -23,7 +25,7 @@ class Mlp_Plugin_Properties implements Inpsyde_Property_List_Interface {
 	 *
 	 * Used if a name is not available in this instance.
 	 *
-	 * @type Inpsyde_Property_List
+	 * @type Inpsyde_Property_List_Interface
 	 */
 	private $parent = NULL;
 
@@ -48,7 +50,7 @@ class Mlp_Plugin_Properties implements Inpsyde_Property_List_Interface {
 	private $frozen = FALSE;
 
 	/**
-	 * @type Mlp_Internal_Locations
+	 * @type \Inpsyde\MultilingualPress\Core\InternalLocations
 	 */
 	private $locations;
 
@@ -90,25 +92,25 @@ class Mlp_Plugin_Properties implements Inpsyde_Property_List_Interface {
 			return $this->locations;
 
 		if ( 'css_url' === $name )
-			return $this->locations->get_dir( 'css', 'url' );
+			return $this->locations->get( 'css', 'url' );
 
 		if ( 'js_url' === $name )
-			return $this->locations->get_dir( 'js', 'url' );
+			return $this->locations->get( 'js', 'url' );
 
 		if ( 'flag_url' === $name )
-			return $this->locations->get_dir( 'flags', 'url' );
+			return $this->locations->get( 'flags', 'url' );
 
 		if ( 'flag_path' === $name )
-			return $this->locations->get_dir( 'flags', 'path' );
+			return $this->locations->get( 'flags', 'path' );
 
 		if ( 'image_url' === $name )
-			return $this->locations->get_dir( 'images', 'url' );
+			return $this->locations->get( 'images', 'url' );
 
 		if ( 'plugin_dir_path' === $name )
-			return $this->locations->get_dir( 'plugin', 'path' );
+			return $this->locations->get( 'plugin', 'path' );
 
 		if ( 'plugin_url' === $name )
-			return $this->locations->get_dir( 'plugin', 'url' );
+			return $this->locations->get( 'plugin', 'url' );
 
 		if ( isset ( $this->properties[ $name ] ) )
 			return $this->properties[ $name ];
@@ -150,7 +152,7 @@ class Mlp_Plugin_Properties implements Inpsyde_Property_List_Interface {
 	 * Further calls to has() and get() will not take this property into account.
 	 *
 	 * @param  string $name
-	 * @return void|Inpsyde_Property_List
+	 * @return void|Inpsyde_Property_List_Interface
 	 */
 	public function delete( $name ) {
 
@@ -270,7 +272,7 @@ class Mlp_Plugin_Properties implements Inpsyde_Property_List_Interface {
 			$code = __CLASS__;
 
 		if ( class_exists( 'WP_Error' ) )
-			return Error::create( $code, $msg );
+			return ( new Error() )->create( $code, $msg );
 
 		throw new Exception( $msg, $code );
 	}

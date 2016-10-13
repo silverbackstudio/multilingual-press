@@ -59,7 +59,7 @@ class Mlp_Redirect_Frontend {
 			return $url;
 		}
 
-		$languages = mlp_get_available_languages();
+		$languages = \Inpsyde\MultilingualPress\get_available_languages();
 		if ( empty( $languages[ $site_id ] ) ) {
 			return $url;
 		}
@@ -92,8 +92,7 @@ class Mlp_Redirect_Frontend {
 		}
 
 		if ( isset( $_SESSION['noredirect'] ) ) {
-			$current_site_language = mlp_get_current_blog_language();
-
+			$current_site_language = \Inpsyde\MultilingualPress\get_current_site_language();
 			if ( in_array( $current_site_language, (array) $_SESSION['noredirect'], true ) ) {
 				return false;
 			}

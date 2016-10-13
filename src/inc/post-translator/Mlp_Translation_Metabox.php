@@ -68,13 +68,7 @@ class Mlp_Translation_Metabox {
 			add_action( 'save_post', [ $this->data, 'save' ], 10, 2 );
 		}
 
-		// Both the generic nonce and request validator are kept for backwards compatibility reasons only.
-		$nonce_validator   = Mlp_Nonce_Validator_Factory::create( 'mlp_post_translator_bc', get_current_blog_id() );
-		$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $nonce_validator );
-
-		$translator_init_args = [ 
-			'nonce'              => $nonce_validator,
-			'request_validator'  => $request_validator,
+		$translator_init_args = [
 			'allowed_post_types' => $this->allowed_post_types,
 			'basic_data'         => $this->data,
 			'instance'           => $this,
@@ -83,8 +77,6 @@ class Mlp_Translation_Metabox {
 		 * Runs before internal actions are registered.
 		 *
 		 * @param array $translator_init_args Translator arguments {
-		 *                                    'nonce'              => Inpsyde_Nonce_Validator
-		 *                                    'request_validator'  => Mlp_Save_Post_Request_Validator
 		 *                                    'allowed_post_types' => string[]
 		 *                                    'basic_data'         => Mlp_Translatable_Post_Data
 		 *                                    'instance'           => Mlp_Translation_Metabox
@@ -109,7 +101,7 @@ class Mlp_Translation_Metabox {
 
 		$site_relations = $this->plugin_data->get( 'site_relations' );
 
-		$related_blogs = $site_relations->get_related_sites( $current_blog_id, false );
+		$related_blogs = $site_relations->get_related_site_ids( $current_blog_id, false );
 
 		if ( empty( $related_blogs ) ) {
 			return;
@@ -126,8 +118,9 @@ class Mlp_Translation_Metabox {
 			}
 		}
 
-		$assets = $this->plugin_data->get( 'assets' );
-		$assets->provide( [ 'mlp-admin', 'mlp_admin_css' ] );
+		$asset_manager = $this->plugin_data->get( 'assets' );
+		$asset_manager->enqueue_script( 'multilingualpress-admin' );
+		$asset_manager->enqueue_style( 'multilingualpress-admin' );
 	}
 
 	/**

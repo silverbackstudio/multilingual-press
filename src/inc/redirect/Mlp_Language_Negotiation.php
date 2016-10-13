@@ -1,6 +1,6 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\AcceptHeader\Parser;
+use Inpsyde\MultilingualPress\Common\AcceptHeader\AcceptHeaderParser;
 use Inpsyde\MultilingualPress\Common\Type\Language;
 use Inpsyde\MultilingualPress\Common\Type\Translation;
 use Inpsyde\MultilingualPress\Module\Redirect\LanguageNegotiation\AcceptLanguageParser;
@@ -22,15 +22,15 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	private $language_api;
 
 	/**
-	 * @var Parser
+	 * @var AcceptHeaderParser
 	 */
 	private $parser;
 
 	/**
 	 * @param Mlp_Language_Api_Interface $language_api Language API object.
-	 * @param Parser                     $parser       Optional. Accept-Language parser object. Defaults to null.
+	 * @param AcceptHeaderParser         $parser       Optional. Accept-Language parser object. Defaults to null.
 	 */
-	public function __construct( Mlp_Language_Api_Interface $language_api, Parser $parser = null ) {
+	public function __construct( Mlp_Language_Api_Interface $language_api, AcceptHeaderParser $parser = null ) {
 
 		$this->language_api = $language_api;
 
@@ -106,22 +106,22 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 		array $user
 	) {
 
-		$language      = $translation->get_language();
+		$language      = $translation->language();
 		$user_priority = $this->get_user_priority( $language, $user );
 
 		if ( 0 === $user_priority )
 			return;
 
-		$url = $translation->get_remote_url();
+		$url = $translation->remote_url();
 
 		if ( empty ( $url ) )
 			return;
 
-		$combined_value   = $language->get_priority() * $user_priority;
+		$combined_value   = $language->priority() * $user_priority;
 		$possible[]       = [
 			'priority' => $combined_value,
 			'url'      => $url,
-			'language' => $language->get_name( 'http' ),
+			'language' => $language->name( 'http' ),
 			'site_id'  => $site_id,
 		];
 	}
@@ -148,12 +148,12 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	private function get_user_priority( Language $language, array $user ) {
 
-		$lang_http = $language->get_name( 'http_name' );
+		$lang_http = $language->name( 'http_name' );
 
 		if ( isset ( $user[ $lang_http ] ) )
 			return $user[ $lang_http ];
 
-		$lang_short = $language->get_name( 'language_short' );
+		$lang_short = $language->name( 'language_short' );
 
 		if ( isset ( $user[ $lang_short ] ) )
 			return $user[ $lang_short ];
@@ -169,7 +169,7 @@ class Mlp_Language_Negotiation implements Mlp_Language_Negotiation_Interface {
 	 */
 	private function parse_accept_header( $accept_header ) {
 
-		$fields = $this->parser->parse_header( $accept_header );
+		$fields = $this->parser->parse( $accept_header );
 
 		if ( empty ( $fields ) )
 			return $fields;
