@@ -1,6 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\Type\Setting;
+use Inpsyde\MultilingualPress\API\Languages;
+use Inpsyde\MultilingualPress\Common\Nonce\Nonce;
 
 /**
  * Update changed languages for the language manager.
@@ -26,9 +27,14 @@ class Mlp_Language_Updater {
 	/**
 	 * Get existing items from database and store changes.
 	 *
-	 * @type Mlp_Data_Access
+	 * @type Languages
 	 */
-	private $db;
+	private $languages;
+
+	/**
+	 * @var Nonce
+	 */
+	private $nonce;
 
 	/**
 	 * Used to get the current page to limit the items to compare.
@@ -38,29 +44,25 @@ class Mlp_Language_Updater {
 	private $pagination_data;
 
 	/**
-	 * @var Setting
-	 */
-	private $setting;
-
-	/**
 	 * Constructor.
 	 *
-	 * @param Setting $setting
 	 * @param Mlp_Browsable         $pagination_data
 	 * @param Mlp_Array_Diff        $array_diff
-	 * @param Mlp_Data_Access       $db
+	 * @param Languages       $languages
+	 * @param Nonce                 $nonce Nonce object.
 	 */
 	public function __construct(
-		Setting $setting,
 		Mlp_Browsable         $pagination_data,
 		Mlp_Array_Diff        $array_diff,
-		Mlp_Data_Access       $db
+		Languages       $languages,
+		Nonce $nonce
 	) {
 
-		$this->setting       = $setting;
 		$this->pagination_data = $pagination_data;
 		$this->array_diff      = $array_diff;
-		$this->db              = $db;
+		$this->languages       = $languages;
+
+		$this->nonce = $nonce;
 	}
 
 	/**
@@ -76,7 +78,7 @@ class Mlp_Language_Updater {
 		$amount = $this->update_changed_items( $diff );
 
 		wp_safe_redirect( $this->get_url( $amount ) );
-		mlp_exit();
+		\Inpsyde\MultilingualPress\call_exit();
 	}
 
 	/**
@@ -86,10 +88,10 @@ class Mlp_Language_Updater {
 	 */
 	private function validate_request() {
 
-		check_admin_referer( $this->setting->action(), $this->setting->nonce_name() );
+		\Inpsyde\MultilingualPress\check_admin_referer( $this->nonce );
 
 		if ( empty ( $_POST[ 'languages' ] ) )
-			mlp_exit( 'invalid request' );
+			\Inpsyde\MultilingualPress\call_exit( 'invalid request' );
 
 		return (array) $_POST[ 'languages' ];
 	}
@@ -101,9 +103,11 @@ class Mlp_Language_Updater {
 	 */
 	private function get_existing_items() {
 
-		$page   = $this->pagination_data->get_current_page();
-		$params = [ 'page' => $page ];
-		$before = $this->db->get_items( $params );
+		$before = $this->languages->get_languages( [
+			'number' => $this->pagination_data->get_items_per_page(),
+			'page'   => $this->pagination_data->get_current_page(),
+		] );
+
 		$return = [];
 
 		foreach ( $before as $id => $data )
@@ -125,7 +129,7 @@ class Mlp_Language_Updater {
 		if ( 0 === $amount )
 			return 0;
 
-		$this->db->update_items_by_id(
+		$this->languages->update_languages_by_id(
 			$diff,
 			[ '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d' ]
 		);

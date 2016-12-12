@@ -1,9 +1,12 @@
 <?php # -*- coding: utf-8 -*-
 
+use Inpsyde\MultilingualPress\Common\Nonce\Nonce;
+use Inpsyde\MultilingualPress\Common\Setting\SettingsBoxViewModel;
+
 /**
  * Provides data for the configuration on the MultilingualPress network settings page.
  */
-class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Data_Interface {
+class Mlp_Quicklink_Positions_Data implements SettingsBoxViewModel {
 
 	/**
 	 * Prefix for 'name' attribute in form fields.
@@ -13,18 +16,18 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 	private $form_name = 'mlp-quicklink-position';
 
 	/**
-	 * @var Inpsyde_Nonce_Validator_Interface
+	 * @var Nonce
 	 */
-	private $nonce_validator;
+	private $nonce;
 
 	/**
 	 * Constructor. Sets up the properties.
 	 *
-	 * @param Inpsyde_Nonce_Validator_Interface $nonce_validator Nonce validator object.
+	 * @param Nonce $nonce Nonce object.
 	 */
-	public function __construct( Inpsyde_Nonce_Validator_Interface $nonce_validator ) {
+	public function __construct( Nonce $nonce ) {
 
-		$this->nonce_validator = $nonce_validator;
+		$this->nonce = $nonce;
 	}
 
 	/**
@@ -34,7 +37,7 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 	 *
 	 * @return string
 	 */
-	public function get_title() {
+	public function title() {
 
 		return esc_html__( 'Quicklink position', 'multilingual-press' );
 	}
@@ -46,7 +49,7 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 	 *
 	 * @return string
 	 */
-	public function get_main_description() {
+	public function description() {
 
 		return '';
 	}
@@ -58,7 +61,7 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 	 *
 	 * @return string
 	 */
-	public function get_main_label_id() {
+	public function label_id() {
 
 		return '';
 	}
@@ -68,23 +71,17 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 	 *
 	 * @return string
 	 */
-	public function get_box_id() {
+	public function id() {
 
 		return $this->form_name . '-setting';
 	}
 
 	/**
-	 * @param string $name
-	 *
 	 * @return mixed|void Either a value, or void for actions.
 	 */
-	public function update( $name ) {
+	public function markup() {
 
-		if ( 'general.settings.extra.box' === $name ) {
-			return $this->get_box_content();
-		}
-
-		return '';
+		return $this->get_box_content();
 	}
 
 	/**
@@ -98,7 +95,7 @@ class Mlp_Quicklink_Positions_Data implements Mlp_Extra_General_Settings_Box_Dat
 
 		$current = $this->get_current_position( $positions );
 
-		$out = wp_nonce_field( $this->nonce_validator->get_action(), $this->nonce_validator->get_name(), true, false );
+		$out = \Inpsyde\MultilingualPress\nonce_field( $this->nonce );
 		$out .= '<p id="mlp-quicklink-positions">';
 
 		foreach ( $positions as $key => $label ) {

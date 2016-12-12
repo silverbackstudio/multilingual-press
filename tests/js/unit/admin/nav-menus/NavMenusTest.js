@@ -1,10 +1,10 @@
-import globalStub from "../../stubs/global";
-import test from "tape";
-import sinon from "sinon";
-import * as _ from "lodash";
-import * as F from "../../functions";
-import jQueryObject from "../../stubs/jQueryObject";
-import NavMenus from "../../../../../resources/js/admin/nav-menus/NavMenus";
+import globalStub from '../../stubs/global';
+import test from 'tape';
+import sinon from 'sinon';
+import * as _ from 'lodash';
+import * as F from '../../functions';
+import JqueryObject from '../../stubs/JqueryObject';
+import NavMenus from '../../../../../resources/js/admin/nav-menus/NavMenus';
 
 const { $, Backbone } = global;
 
@@ -51,13 +51,13 @@ test( 'settings ...', ( assert ) => {
 test( 'sendRequest ...', ( assert ) => {
 	const menu = F.getRandomString();
 
-	const $menu = new jQueryObject();
+	const $menu = new JqueryObject();
 	$menu.val.returns( menu );
 
 	$.withArgs( '#menu' ).returns( $menu );
 
-	const $el = new jQueryObject();
-	$el.find.returns( new jQueryObject() );
+	const $el = new JqueryObject();
+	$el.find.returns( new JqueryObject() );
 
 	const model = new Backbone.Model();
 
@@ -73,10 +73,10 @@ test( 'sendRequest ...', ( assert ) => {
 
 	const testee = createTestee( options );
 
-	const siteIDs = F.getRandomArray();
+	const siteIds = F.getRandomArray();
 
 	// Make method return a random array.
-	testee.getSiteIDs = () => siteIDs;
+	testee.getSiteIds = () => siteIds;
 
 	const event = {
 		preventDefault: sinon.spy()
@@ -88,7 +88,7 @@ test( 'sendRequest ...', ( assert ) => {
 		data: {
 			action: options.settings.action,
 			menu,
-			mlp_sites: siteIDs
+			mlp_sites: siteIds
 		},
 		processData: true
 	};
@@ -112,17 +112,17 @@ test( 'sendRequest ...', ( assert ) => {
 	assert.end();
 } );
 
-test( 'getSiteIDs (no checked languages) ...', ( assert ) => {
-	const $languages = new jQueryObject();
+test( 'getSiteIds (no checked languages) ...', ( assert ) => {
+	const $languages = new JqueryObject();
 	$languages.filter.returnsThis();
 
-	const $el = new jQueryObject();
+	const $el = new JqueryObject();
 	$el.find.returns( $languages );
 
 	const testee = createTestee( { $el } );
 
 	assert.deepEqual(
-		testee.getSiteIDs(),
+		testee.getSiteIds(),
 		[],
 		'... SHOULD return an empty array (which is the default).'
 	);
@@ -130,12 +130,12 @@ test( 'getSiteIDs (no checked languages) ...', ( assert ) => {
 	assert.end();
 } );
 
-test( 'getSiteIDs (checked languages) ...', ( assert ) => {
+test( 'getSiteIds (checked languages) ...', ( assert ) => {
 	const testee = createTestee();
 
 	const _elements = F.getRandomArray( 1 );
 
-	const $languages = new jQueryObject( { _elements } );
+	const $languages = new JqueryObject( { _elements } );
 	$languages.filter.returnsThis();
 
 	NavMenus.__Rewire__( '_this', {
@@ -143,7 +143,7 @@ test( 'getSiteIDs (checked languages) ...', ( assert ) => {
 	} );
 
 	assert.equal(
-		testee.getSiteIDs().length,
+		testee.getSiteIds().length,
 		_elements.length,
 		'... SHOULD return an array with the expected length.'
 	);
@@ -152,8 +152,8 @@ test( 'getSiteIDs (checked languages) ...', ( assert ) => {
 } );
 
 test( 'render (unsuccessful AJAX request) ...', ( assert ) => {
-	const $el = new jQueryObject();
-	$el.find.returns( new jQueryObject() );
+	const $el = new JqueryObject();
+	$el.find.returns( new JqueryObject() );
 
 	const model = new Backbone.Model();
 	model.get.returns( false );
@@ -181,12 +181,12 @@ test( 'render (unsuccessful AJAX request) ...', ( assert ) => {
 } );
 
 test( 'render (successful AJAX request) ...', ( assert ) => {
-	const $menuToEdit = new jQueryObject();
+	const $menuToEdit = new JqueryObject();
 
 	$.withArgs( '#menu-to-edit' ).returns( $menuToEdit );
 
-	const $el = new jQueryObject();
-	$el.find.returns( new jQueryObject() );
+	const $el = new JqueryObject();
+	$el.find.returns( new JqueryObject() );
 
 	const data = F.getRandomString();
 

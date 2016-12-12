@@ -1,6 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 use Inpsyde\MultilingualPress\API\SiteRelations;
+use Inpsyde\MultilingualPress\Factory\NonceFactory;
 
 /**
  * Data model for advanced post translation. Handles inserts and updates.
@@ -20,12 +21,17 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	/**
 	 * @var string
 	 */
-	private $name_base = 'mlp_translation_data';
+	private $id_base = 'mlp-translation-data';
 
 	/**
 	 * @var string
 	 */
-	private $id_base = 'mlp-translation-data';
+	private $name_base = 'mlp_translation_data';
+
+	/**
+	 * @var NonceFactory
+	 */
+	private $nonce_factory;
 
 	/**
 	 * @var array
@@ -48,13 +54,15 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 * @param                                      $deprecated
 	 * @param Mlp_Translatable_Post_Data_Interface $basic_data
 	 * @param array                                $allowed_post_types
-	 * @param SiteRelations         $relations
+	 * @param SiteRelations                        $relations
+	 * @param NonceFactory                         $nonce_factory Nonce factory object.
 	 */
 	public function __construct(
 		$deprecated,
 		Mlp_Translatable_Post_Data_Interface $basic_data,
 		array $allowed_post_types,
-		SiteRelations $relations
+		SiteRelations $relations,
+		NonceFactory $nonce_factory
 	) {
 
 		$this->basic_data = $basic_data;
@@ -62,6 +70,8 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		$this->allowed_post_types = $allowed_post_types;
 
 		$this->relations = $relations;
+
+		$this->nonce_factory = $nonce_factory;
 
 		if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
 			$this->post_request_data = $_POST;
@@ -113,7 +123,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 
 		$source_blog_id = get_current_blog_id();
 
-		$thumb_data = $this->get_source_thumb_data( $post_id );
+		$featured_image_path = $this->get_featured_image_path( $post_id );
 
 		$related_blogs = $this->relations->get_related_site_ids( $source_blog_id );
 		if ( empty( $related_blogs ) ) {
@@ -146,16 +156,18 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		do_action( 'mlp_before_post_synchronization', $this->save_context );
 
 		foreach ( $this->post_request_data[ $this->name_base ] as $remote_blog_id => $post_data ) {
-			if ( ! blog_exists( $remote_blog_id ) || ! in_array( $remote_blog_id, $related_blogs ) ) {
+			if (
+				! in_array( $remote_blog_id, $related_blogs )
+				|| ! \Inpsyde\MultilingualPress\site_exists( $remote_blog_id )
+			) {
 				continue;
 			}
 
-			$nonce_validator = Mlp_Nonce_Validator_Factory::create(
+			$nonce = $this->nonce_factory->create( [
 				"save_translation_of_post_{$post_id}_for_site_$remote_blog_id",
-				$source_blog_id
-			);
+			] );
 
-			$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $nonce_validator );
+			$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $nonce );
 			if ( ! $request_validator->is_valid( $post ) ) {
 				continue;
 			}
@@ -175,8 +187,8 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 
 				$this->basic_data->update_remote_post_meta( $new_id, $post_meta );
 
-				if ( $sync_thumb && $thumb_data->has_thumb ) {
-					$this->copy_thumb( $new_id, $thumb_data );
+				if ( $sync_thumb && $featured_image_path ) {
+					$this->copy_thumb( $new_id, $featured_image_path );
 				}
 
 				$tax_data = empty( $post_data['tax'] ) ? [] : (array) $post_data['tax'];
@@ -244,12 +256,12 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	/**
 	 * Copy the featured image.
 	 *
-	 * @param  int      $new_id
-	 * @param  stdClass $thumb_data
+	 * @param int    $new_id
+	 * @param string $featured_image_path
 	 *
 	 * @return bool     TRUE on success, FALSE when the image could not be copied.
 	 */
-	private function copy_thumb( $new_id, stdClass $thumb_data ) {
+	private function copy_thumb( $new_id, $featured_image_path ) {
 
 		// Prepare and Copy the image
 		$filedir = wp_upload_dir();
@@ -259,8 +271,8 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return false;
 		}
 
-		$filename = wp_unique_filename( $filedir['path'], $thumb_data->meta['file'] );
-		$copy     = copy( $thumb_data->file_path, $filedir['path'] . '/' . $filename );
+		$filename = wp_unique_filename( $filedir['path'], basename( $featured_image_path ) );
+		$copy     = copy( $featured_image_path, $filedir['path'] . '/' . $filename );
 
 		// Now insert it into the posts
 		if ( ! $copy ) {
@@ -301,32 +313,19 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 *
 	 * @param  int $post_id
 	 *
-	 * @return stdClass
+	 * @return string
 	 */
-	private function get_source_thumb_data( $post_id ) {
-
-		$data = new stdClass();
+	private function get_featured_image_path( $post_id ) {
 
 		if ( ! has_post_thumbnail( $post_id ) ) {
-			$data->has_thumb = false;
-
-			return $data;
+			return '';
 		}
 
-		$data->has_thumb = true;
+		$meta = wp_get_attachment_metadata( get_post_thumbnail_id( $post_id ) );
 
-		include_once ABSPATH . 'wp-admin/includes/image.php';
-		include_once ABSPATH . WPINC . '/media.php';
+		$filedir = wp_upload_dir();
 
-		// Load Original Image
-		$data->id   = get_post_thumbnail_id( $post_id );
-		$data->meta = wp_get_attachment_metadata( $data->id );
-
-		// Build path to original Image
-		$data->filedir   = wp_upload_dir();
-		$data->file_path = $data->filedir['basedir'] . '/' . $data->meta['file'];
-
-		return $data;
+		return $filedir['basedir'] . '/' . $meta['file'];
 	}
 
 	/**
@@ -603,17 +602,19 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 
 		static $called = 0;
 
-		// For auto-drafts, 'save_post' is called twice, resulting in doubled drafts for translations.
-		$called += 1;
-
-		if ( ! empty( $this->post_request_data['original_post_status'] )
-		     && 'auto-draft' === $this->post_request_data['original_post_status']
-		     && 1 < $called
-		) {
+		if ( ms_is_switched() ) {
 			return false;
 		}
 
 		if ( empty( $this->post_request_data ) ) {
+			return false;
+		}
+
+		if (
+			! empty( $this->post_request_data['original_post_status'] )
+			&& 'auto-draft' === $this->post_request_data['original_post_status']
+			&& 1 < $called
+		) {
 			return false;
 		}
 
@@ -630,6 +631,9 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return false;
 		}
 
+		// For auto-drafts, 'save_post' is called twice, resulting in doubled drafts for translations.
+		$called++;
+
 		return true;
 	}
 
@@ -644,6 +648,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 	 */
 	private function is_connectable_status( WP_Post $post ) {
 
+		// TODO: Discuss post status "future"...
 		if ( in_array( $post->post_status, [ 'publish', 'draft', 'private', 'auto-draft' ], true ) ) {
 			return true;
 		}

@@ -65,10 +65,10 @@ class RelationshipControl extends Backbone.View {
 	 * @returns {jQuery[]} The array of jQuery objects representing meta boxes with unsaved relationships.
 	 */
 	updateUnsavedRelationships( event ) {
-		const $input = $( event.target ),
-			$metaBox = $input.closest( '.mlp-translation-meta-box' ),
-			$button = $metaBox.find( '.mlp-save-relationship-button' ),
-			index = _this.unsavedRelationships.findIndex( e => e === $metaBox );
+		const $input = $( event.target );
+		const $metaBox = $input.closest( '.mlp-translation-meta-box' );
+		const $button = $metaBox.find( '.mlp-save-relationship-button' );
+		const index = _this.unsavedRelationships.findIndex( ( e ) => e === $metaBox );
 
 		if ( 'stay' === $input.val() ) {
 			$button.prop( 'disabled', 'disabled' );
@@ -90,7 +90,7 @@ class RelationshipControl extends Backbone.View {
 	 * @param {Event} event - The click event of the publish button.
 	 */
 	confirmUnsavedRelationships( event ) {
-		if ( _this.unsavedRelationships.length && ! window.confirm( this.settings.L10n.unsavedRelationships ) ) {
+		if ( _this.unsavedRelationships.length && ! window.confirm( this.settings.l10n.unsavedRelationships ) ) {
 			event.preventDefault();
 		}
 	}
@@ -100,10 +100,10 @@ class RelationshipControl extends Backbone.View {
 	 * @param {Event} event - The click event of a save relationship button.
 	 */
 	saveRelationship( event ) {
-		const $button = $( event.target ),
-			remoteSiteID = $button.data( 'remote-site-id' ),
-			action = $( 'input[name="mlp-rc-action[' + remoteSiteID + ']"]:checked' ).val(),
-			eventName = this.getEventName( action );
+		const $button = $( event.target );
+		const $container = $button.closest( '.mlp-relationship-control' );
+		const remoteSiteId = $container.data( 'remote-site-id' );
+		const action = $( `input[name="mlp_rc_action[${remoteSiteId}]"]:checked` ).val();
 
 		if ( 'stay' === action ) {
 			return;
@@ -111,15 +111,17 @@ class RelationshipControl extends Backbone.View {
 
 		$button.prop( 'disabled', 'disabled' );
 
+		const eventName = this.getEventName( action );
+
 		/**
 		 * Triggers the according event for the current relationship action, and passes data and the event's name.
 		 */
-		_this.EventManager.trigger( 'RelationshipControl:' + eventName, {
-			action: 'mlp_rc_' + action,
-			remote_site_id: remoteSiteID,
-			remote_post_id: $button.data( 'remote-post-id' ),
-			source_site_id: $button.data( 'source-site-id' ),
-			source_post_id: $button.data( 'source-post-id' )
+		_this.EventManager.trigger( `RelationshipControl:${eventName}`, {
+			action,
+			remote_post_id: $container.data( 'remote-post-id' ),
+			remote_site_id: remoteSiteId,
+			source_post_id: $container.data( 'source-post-id' ),
+			source_site_id: $container.data( 'source-site-id' ),
 		}, eventName );
 	}
 
@@ -130,13 +132,13 @@ class RelationshipControl extends Backbone.View {
 	 */
 	getEventName( action ) {
 		switch ( action ) {
-			case 'search':
+			case this.settings.actionConnectExisting:
 				return 'connectExistingPost';
 
-			case 'new':
+			case this.settings.actionConnectNew:
 				return 'connectNewPost';
 
-			case 'disconnect':
+			case this.settings.actionDisconnect:
 				return 'disconnectPost';
 		}
 
@@ -148,9 +150,11 @@ class RelationshipControl extends Backbone.View {
 	 * @param {Object} data - The common data for all relationship requests.
 	 */
 	connectNewPost( data ) {
-		data.new_post_title = $( 'input[name="post_title"]' ).val();
+		const postData = data;
 
-		this.sendRequest( data );
+		postData.new_post_title = $( 'input[name="post_title"]' ).val();
+
+		this.sendRequest( postData );
 	}
 
 	/**
@@ -167,17 +171,18 @@ class RelationshipControl extends Backbone.View {
 	 * @returns {Boolean} Whether or not the request has been sent.
 	 */
 	connectExistingPost( data ) {
-		const newPostID = Number( $( 'input[name="mlp_add_post[' + data.remote_site_id + ']"]:checked' ).val() || 0 );
-
-		if ( ! newPostID ) {
-			window.alert( this.settings.L10n.noPostSelected );
+		const newPostId = Number( $( `input[name="mlp_add_post[${data.remote_site_id}]"]:checked` ).val() || 0 );
+		if ( ! newPostId ) {
+			window.alert( this.settings.l10n.noPostSelected );
 
 			return false;
 		}
 
-		data.new_post_id = newPostID;
+		const postData = data;
 
-		this.sendRequest( data );
+		postData.new_post_id = newPostId;
+
+		this.sendRequest( postData );
 
 		return true;
 	}

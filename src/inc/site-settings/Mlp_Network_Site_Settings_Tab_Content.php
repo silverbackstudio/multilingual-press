@@ -1,6 +1,8 @@
 <?php # -*- coding: utf-8 -*-
 
+use Inpsyde\MultilingualPress\API\Languages;
 use Inpsyde\MultilingualPress\API\SiteRelations;
+use Inpsyde\MultilingualPress\Common\Nonce\Nonce;
 use Inpsyde\MultilingualPress\Common\Type\Setting;
 
 /**
@@ -18,9 +20,14 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	private $blog_id;
 
 	/**
-	 * @var Mlp_Language_Api_Interface
+	 * @var Languages
 	 */
-	private $language_api;
+	private $languages;
+
+	/**
+	 * @var Nonce
+	 */
+	private $nonce;
 
 	/**
 	 * @var SiteRelations
@@ -35,25 +42,29 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	/**
 	 * Constructor. Set up the properties.
 	 *
-	 * @param Mlp_Language_Api_Interface   $language_api Language API.
-	 * @param Setting                      $setting      Options page data.
-	 * @param int                          $blog_id      Blog ID
-	 * @param SiteRelations $relations    Site relations.
+	 * @param Languages     $languages Languages API object.
+	 * @param Setting       $setting   Options page data.
+	 * @param int           $blog_id   Blog ID
+	 * @param SiteRelations $relations Site relations.
+	 * @param Nonce         $nonce     Nonce object.
 	 */
 	public function __construct(
-		Mlp_Language_Api_Interface $language_api,
+		Languages $languages,
 		Setting $setting,
 		$blog_id,
-		SiteRelations $relations
+		SiteRelations $relations,
+		Nonce $nonce
 	) {
 
-		$this->language_api = $language_api;
+		$this->languages = $languages;
 
 		$this->setting = $setting;
 
 		$this->blog_id = $blog_id;
 
 		$this->relations = $relations;
+
+		$this->nonce = $nonce;
 	}
 
 	/**
@@ -63,19 +74,16 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	 */
 	public function render_content() {
 
-		$action = $this->setting->action();
 		?>
 		<form action="<?php echo $this->setting->url(); ?>" method="post">
-			<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>" />
-			<input type="hidden" name="id" value="<?php echo esc_attr($this->blog_id); ?>" />
+			<input type="hidden" name="action" value="<?php echo esc_attr( $this->setting->action() ); ?>" />
+			<input type="hidden" name="id" value="<?php echo esc_attr( $this->blog_id ); ?>" />
 			<?php
-			wp_nonce_field( $action, $this->setting->nonce_name() );
+			echo \Inpsyde\MultilingualPress\nonce_field( $this->nonce );
 
 			$siteoption = get_site_option( 'inpsyde_multilingual', [] );
-			$languages  = $this->language_api->get_db()->get_items( [ 'page' => -1 ]  );
-
 			echo '<table class="form-table mlp-admin-settings-table">';
-			$this->show_language_options( $siteoption, $languages );
+			$this->show_language_options( $siteoption, $this->languages->get_all_languages() );
 			$this->show_blog_relationships( $siteoption );
 
 			/**
@@ -108,7 +116,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 
 	/**
 	 * @param  array $site_option
-	 * @param  array $languages
+	 * @param  object[] $languages
 	 * @return void
 	 */
 	private function show_language_options( $site_option, $languages ) {
@@ -190,7 +198,7 @@ class Mlp_Network_Site_Settings_Tab_Content {
 	}
 
 	/**
-	 * @param stdClass $language
+	 * @param object $language
 	 * @return string
 	 */
 	private function get_language_name( $language ) {
