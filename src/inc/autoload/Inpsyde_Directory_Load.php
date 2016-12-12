@@ -57,19 +57,33 @@ class Inpsyde_Directory_Load implements Inpsyde_Autoload_Rule_Interface {
 	 */
 	private function read_files() {
 
-		$return = [];
-		$files  = glob( $this->dir . '/*.php' );
+		$return = array();
+		$files = array();
 
-		// Catch empty values to prevent multiple attempts to read the directory.
-		if ( FALSE === $files )
-			return [ 'error' ];
+		if( extension_loaded('SPL') && class_exists('RegexIterator') ){
 
-		if ( [] === $files )
-			return [ 'empty' ];
+			$directoryIterator = new DirectoryIterator( $this->dir );
+			$fileIterator = new RegexIterator( $directoryIterator, '/^.+\.php$/i', RegexIterator::GET_MATCH );
+
+			foreach ( $fileIterator as $file )
+				$files[] = $file[0];
+
+		} elseif ( function_exists('glob') ) {
+
+			$files  = glob( $this->dir . '/*.php' );
+
+			// Catch empty values to prevent multiple attempts to read the directory.
+			if ( FALSE === $files )
+				return array ( 'error' );
+		}
+
+		if ( array () === $files )
+			return array ( 'empty' );
 
 		foreach ( $files as $file )
 			$return[ basename( $file, '.php' ) ] = 1;
 
 		return $return;
 	}
+
 }

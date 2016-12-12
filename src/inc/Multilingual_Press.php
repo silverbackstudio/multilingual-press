@@ -205,13 +205,24 @@ class Multilingual_Press {
 	protected function load_features() {
 
 		$found = [];
+		$files = [];
 
 		$path = $this->properties->plugin_dir_path() . '/src/inc';
 
 		if ( ! is_readable( $path ) )
 			return $found;
 
-		$files = glob( "$path/feature.*.php" );
+		if( extension_loaded('SPL') && class_exists('RegexIterator') ){
+
+			$directoryIterator = new DirectoryIterator( $path );
+			$fileIterator = new RegexIterator( $directoryIterator, '/^feature\..+\.php$/i', RegexIterator::GET_MATCH );
+
+			foreach ( $fileIterator as $file )
+				$files[] = $file[0];
+
+		} elseif ( function_exists('glob') ) {
+			$files = glob( "$path/feature.*.php" );
+		}
 
 		if ( empty ( $files ) )
 			return $found;
