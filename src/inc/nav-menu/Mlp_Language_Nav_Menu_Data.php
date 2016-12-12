@@ -1,6 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 use Inpsyde\MultilingualPress\Asset\AssetManager;
+use Inpsyde\MultilingualPress\Common\Nonce\Nonce;
 
 /**
  * Data read and write for backend nav menu management.
@@ -23,7 +24,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	private $handle;
 
 	/**
-	 * @var Inpsyde_Nonce_Validator_Interface
+	 * @var Nonce
 	 */
 	private $nonce;
 
@@ -37,13 +38,13 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 *
 	 * @param string                            $handle
 	 * @param string                            $meta_key
-	 * @param Inpsyde_Nonce_Validator_Interface $nonce
+	 * @param Nonce $nonce
 	 * @param AssetManager              $asset_manager
 	 */
 	public function __construct(
 		$handle,
 		$meta_key,
-		Inpsyde_Nonce_Validator_Interface $nonce,
+		Nonce $nonce,
 		AssetManager $asset_manager
 	) {
 
@@ -61,7 +62,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 */
 	public function get_list() {
 
-		return mlp_get_available_languages_titles( true );
+		return \Inpsyde\MultilingualPress\get_available_language_names();
 	}
 
 	/**
@@ -110,9 +111,9 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 
 		$this->asset_manager->add_script_data( 'multilingualpress-admin', 'mlpNavMenusSettings', [
 			'action'    => $this->handle,
-			'metaBoxID' => $this->handle,
-			'nonce'     => wp_create_nonce( $this->nonce->get_action() ),
-			'nonceName' => $this->nonce->get_name(),
+			'metaBoxId' => $this->handle,
+			'nonce'     => (string) $this->nonce,
+			'nonceName' => $this->nonce->action(),
 		] );
 	}
 
@@ -129,7 +130,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 			return [];
 		}
 
-		$titles = mlp_get_available_languages_titles( true );
+		$titles = \Inpsyde\MultilingualPress\get_available_language_names();
 
 		return $this->prepare_menu_items( $titles );
 	}
@@ -187,7 +188,7 @@ class Mlp_Language_Nav_Menu_Data implements Mlp_Nav_Menu_Selector_Data_Interface
 	 */
 	private function is_valid_blog_id( array $titles, $blog_id ) {
 
-		return isset( $titles[ $blog_id ] ) && blog_exists( $blog_id );
+		return isset( $titles[ $blog_id ] ) && \Inpsyde\MultilingualPress\site_exists( $blog_id );
 	}
 
 	/**

@@ -1,5 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
+use Inpsyde\MultilingualPress\API\Languages;
+
 /**
  * This view template renders several setting fields for the Add New Site admin page.
  */
@@ -11,18 +13,18 @@ class Mlp_New_Site_View {
 	private $default_language;
 
 	/**
-	 * @var Mlp_Language_Api_Interface
+	 * @var Languages
 	 */
-	private $language_api;
+	private $languages;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param Mlp_Language_Api_Interface $language_api
+	 * @param Languages $languages
 	 */
-	public function __construct( Mlp_Language_Api_Interface $language_api ) {
+	public function __construct( Languages $languages ) {
 
-		$this->language_api = $language_api;
+		$this->languages = $languages;
 
 		$this->default_language = $this->get_default_language();
 	}
@@ -59,9 +61,7 @@ class Mlp_New_Site_View {
 	 */
 	public function render() {
 
-		$db = $this->language_api->get_db();
-
-		$languages = $db->get_items( [ 'page' => -1 ] );
+		$languages = $this->languages->get_all_languages();
 		?>
 		<h2>
 			<?php esc_html_e( 'MultilingualPress', 'multilingual-press' ); ?>
@@ -177,7 +177,7 @@ class Mlp_New_Site_View {
 	 */
 	private function render_relationships() {
 
-		$sites = get_site_option( 'inpsyde_multilingual', [] );
+		$sites = (array) get_site_option( 'inpsyde_multilingual', [] );
 		foreach ( array_keys( $sites ) as $site_id ) {
 			$site_id = (int) $site_id;
 

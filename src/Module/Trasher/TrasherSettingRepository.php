@@ -3,12 +3,12 @@
 namespace Inpsyde\MultilingualPress\Module\Trasher;
 
 /**
- * Trasher setting repository.
+ * Interface or all trasher setting repository implementations.
  *
  * @package Inpsyde\MultilingualPress\Module\Trasher
  * @since   3.0.0
  */
-class TrasherSettingRepository {
+interface TrasherSettingRepository {
 
 	/**
 	 * Meta key.
@@ -28,10 +28,7 @@ class TrasherSettingRepository {
 	 *
 	 * @return bool The trasher setting value for the post with the given ID, or the current post.
 	 */
-	public function get( $post_id = 0 ) {
-
-		return (bool) get_post_meta( $post_id ?: get_the_ID(), self::META_KEY, true );
-	}
+	public function get( $post_id = 0 );
 
 	/**
 	 * Updates the trasher setting value for the post with the given ID.
@@ -43,8 +40,5 @@ class TrasherSettingRepository {
 	 *
 	 * @return bool Whether or not the trasher setting value was updated successfully.
 	 */
-	public function update( $post_id, $value ) {
-
-		return (bool) update_post_meta( $post_id, self::META_KEY, (bool) $value );
-	}
+	public function update( $post_id, $value );
 }

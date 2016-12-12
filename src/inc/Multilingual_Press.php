@@ -1,9 +1,8 @@
 <?php # -*- coding: utf-8 -*-
 
-use Inpsyde\MultilingualPress\Common\Admin\ActionLink;
+use Inpsyde\MultilingualPress\Common\Nonce\WPNonce;
 use Inpsyde\MultilingualPress\Common\PluginProperties;
 use Inpsyde\MultilingualPress\Core;
-use Inpsyde\MultilingualPress\Module\NetworkOptionModuleManager;
 use Inpsyde\MultilingualPress\Service\Container;
 
 /**
@@ -65,15 +64,6 @@ class Multilingual_Press {
 	 */
 	public function setup() {
 
-		$this->prepare_plugin_data();
-		$this->prepare_helpers();
-
-		if ( ! $this->is_active_site() )
-			return false;
-
-		// Hooks and filters
-		add_action( 'inpsyde_mlp_loaded', [ $this, 'load_plugin_textdomain' ], 1 );
-
 		// Load modules
 		$this->load_features();
 
@@ -110,27 +100,6 @@ class Multilingual_Press {
 	}
 
 	/**
-	 * Check if the current context needs more MultilingualPress actions.
-	 *
-	 * @return bool
-	 */
-	private function is_active_site() {
-
-		global $pagenow;
-
-		if ( in_array( $pagenow, [ 'admin-post.php', 'admin-ajax.php' ], true ) ) {
-			return true;
-		}
-
-		if ( is_network_admin() )
-			return TRUE;
-
-		if ( array_key_exists( get_current_blog_id(), (array) get_site_option( 'inpsyde_multilingual', [] ) ) )
-			return TRUE;
-
-		return FALSE;
-	}
-	/**
 	 * @return void
 	 */
 	public function late_load() {
@@ -142,57 +111,6 @@ class Multilingual_Press {
 		 * @param wpdb                            $wpdb        Database object.
 		 */
 		do_action( 'mlp_and_wp_loaded', $this->plugin_data, $this->wpdb );
-	}
-
-	/**
-	 * Load the localization
-	 *
-	 * @since 0.1
-	 * @uses load_plugin_textdomain, plugin_basename
-	 * @return void
-	 */
-	public function load_plugin_textdomain() {
-
-		$rel_path = dirname( $this->properties->plugin_base_name() ) . $this->properties->text_domain_path();
-
-		load_plugin_textdomain( 'multilingual-press', FALSE, $rel_path );
-	}
-
-	/**
-	 * Create network settings page.
-	 *
-	 * @return void
-	 */
-	private function load_module_settings_page() {
-
-		$settings = new Mlp_General_Settingspage(
-			$this->plugin_data->get( 'module_manager' ),
-			$this->container['multilingualpress.asset_manager']
-		);
-		add_action( 'plugins_loaded', [ $settings, 'setup' ], 8 );
-
-		// TODO: Don't hard-code URL.
-		$settings_page_url = network_admin_url( 'settings.php?page=mlp' );
-
-		( new ActionLink(
-			'settings',
-			'<a href="' . esc_url( $settings_page_url ) . '">' . __( 'Settings', 'multilingual-press' ) . '</a>'
-		) )->register( 'network_admin_plugin_action_links_' . $this->properties->plugin_base_name() );
-	}
-
-	/**
-	 * Create site settings page.
-	 *
-	 * @return void
-	 */
-	private function load_site_settings_page() {
-
-		$settings = new Mlp_General_Settingspage(
-			$this->plugin_data->get( 'site_manager' ),
-			$this->container['multilingualpress.asset_manager']
-		);
-		$settings->setup();
-		add_action( 'plugins_loaded', [ $settings, 'setup' ], 8 );
 	}
 
 	/**
@@ -260,10 +178,12 @@ class Multilingual_Press {
 			update_site_option( 'inpsyde_multilingual', $blogs );
 		}
 
+		$table = $this->container['multilingualpress.content_relations_table']->name();
+
 		// Clean up linked elements table
 		$sql = "
 			DELETE
-			FROM {$this->link_table}
+			FROM {$table}
 			WHERE ml_source_blogid = %d
 				OR ml_blogid = %d";
 		$sql = $wpdb->prepare( $sql, $blog_id, $blog_id );
@@ -291,19 +211,6 @@ class Multilingual_Press {
 		$site_language = str_replace( '_', '-', $site_language );
 
 		return str_replace( $language, $site_language, $output );
-	}
-
-	/**
-	 * Checks for errors
-	 *
-	 * @access	public
-	 * @since	0.8
-	 * @uses
-	 * @return	boolean
-	 */
-	public function check_for_user_errors() {
-
-		return $this->check_for_errors();
 	}
 
 	/**
@@ -348,22 +255,16 @@ class Multilingual_Press {
 	 */
 	private function run_admin_actions() {
 
-		$module_manager = $this->plugin_data->get( 'module_manager' );
-		if ( $module_manager->has_modules() ) {
-			$this->load_module_settings_page();
-		}
+		$setting = new Mlp_Network_Site_Settings_Tab_Data( $this->plugin_data->get( 'type_factory' ) );
 
-		$site_manager = $this->plugin_data->get( 'site_manager' );
-		if ( $site_manager->has_modules() ) {
-			$this->load_site_settings_page();
-		}
+		$nonce = new WPNonce( $setting->action() );
 
 		// TODO: Check what this sucker needs...
-		new Mlp_Network_Site_Settings_Controller( $this->plugin_data );
+		new Mlp_Network_Site_Settings_Controller( $this->plugin_data, $setting, $nonce );
 
 		new Mlp_Network_New_Site_Controller(
-			$this->plugin_data->get( 'language_api' ),
-			$this->plugin_data->get( 'site_relations' )
+			$this->plugin_data->get( 'site_relations' ),
+			$this->plugin_data->get( 'languages' )
 		);
 	}
 
@@ -381,51 +282,51 @@ class Multilingual_Press {
 		);
 		add_action( 'template_redirect', function () use ( $translations ) {
 
-			( new Core\FrontEnd\AlternateLanguages\HTTPHeaders( $translations ) )->send();
+			if ( ! is_paged() ) {
+				( new Core\FrontEnd\AlternateLanguages\HTTPHeaders( $translations ) )->send();
+			}
 		} );
 		add_action( 'wp_head', function () use ( $translations ) {
 
-			( new Core\FrontEnd\AlternateLanguages\HTMLLinkTags( $translations ) )->render();
+			if ( ! is_paged() ) {
+				( new Core\FrontEnd\AlternateLanguages\HTMLLinkTags( $translations ) )->render();
+			}
 		} );
 	}
 
 	/**
 	 * @return void
 	 */
-	private function prepare_plugin_data() {
-
-		$type_factory = $this->container['multilingualpress.type_factory'];
+	public function prepare_plugin_data() {
 
 		$site_relations = $this->container['multilingualpress.site_relations'];
 
-		$this->plugin_data->set( 'module_manager', $this->container['multilingualpress.module_manager'] );
-		// TODO: Check if the "site manager" really should be a module manager object...
-		$this->plugin_data->set( 'site_manager', new NetworkOptionModuleManager( 'inpsyde_multilingual' ) );
+		$content_relations = $this->container['multilingualpress.content_relations'];
 
-		$this->plugin_data->set( 'site_relations', $site_relations );
-		$this->plugin_data->set( 'type_factory', $type_factory );
-		$this->plugin_data->set( 'link_table', $this->container['multilingualpress.content_relations_table']->name() );
-		$this->plugin_data->set( 'content_relations', $this->container['multilingualpress.content_relations'] );
-		$this->plugin_data->set( 'language_api', new Mlp_Language_Api(
+		$type_factory = $this->container['multilingualpress.type_factory'];
+
+		$language_api = new Mlp_Language_Api(
 			$this->plugin_data,
 			'mlp_languages',
 			$site_relations,
-			$this->plugin_data->get( 'content_relations' ),
+			$content_relations,
 			$this->wpdb,
-			$type_factory
-		) );
+			$type_factory,
+			$this->container['multilingualpress.request']
+		);
 
+		$this->plugin_data->set( 'module_manager', $this->container['multilingualpress.module_manager'] );
+		$this->plugin_data->set( 'site_relations', $site_relations );
+		$this->plugin_data->set( 'type_factory', $type_factory );
+		$this->plugin_data->set( 'link_table', $this->container['multilingualpress.content_relations_table']->name() );
+		$this->plugin_data->set( 'content_relations', $content_relations );
+		$this->plugin_data->set( 'language_api', $language_api );
 		// TODO: Remove as soon as the whole Assets structures have been refactored (Locations -> Assets\Locator).
 		$this->plugin_data->set( 'assets', $this->container['multilingualpress.asset_manager'] );
+		$this->plugin_data->set( 'languages', $this->container['multilingualpress.languages'] );
 		$this->plugin_data->set( 'locations', $this->container['multilingualpress.internal_locations'] );
-	}
-
-	/**
-	 * @return void
-	 */
-	private function prepare_helpers() {
+		$this->plugin_data->set( 'nonce_factory', $this->container['multilingualpress.nonce_factory'] );
 
 		Mlp_Helpers::insert_dependency( 'language_api', $this->plugin_data->get( 'language_api' ) );
 	}
-
 }

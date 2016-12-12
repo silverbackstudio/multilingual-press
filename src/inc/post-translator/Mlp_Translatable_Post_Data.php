@@ -1,6 +1,7 @@
 <?php # -*- coding: utf-8 -*-
 
 use Inpsyde\MultilingualPress\API\ContentRelations;
+use Inpsyde\MultilingualPress\Factory\NonceFactory;
 
 /**
  * Data model for post translation. Handles inserts of new posts only.
@@ -23,6 +24,11 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	private $link_table;
 
 	/**
+	 * @var NonceFactory
+	 */
+	private $nonce_factory;
+
+	/**
 	 * @var array
 	 */
 	private $parent_elements = [];
@@ -43,16 +49,18 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	private $source_site_id;
 
 	/**
-	 * @param                                 $deprecated
-	 * @param array                           $allowed_post_types
-	 * @param string                          $link_table
+	 * @param                  $deprecated
+	 * @param array            $allowed_post_types
+	 * @param string           $link_table
 	 * @param ContentRelations $content_relations
+	 * @param NonceFactory     $nonce_factory      Nonce factory object.
 	 */
 	function __construct(
 		$deprecated,
 		array $allowed_post_types,
 		$link_table,
-		ContentRelations $content_relations
+		ContentRelations $content_relations,
+		NonceFactory $nonce_factory
 	) {
 
 		$this->allowed_post_types = $allowed_post_types;
@@ -60,6 +68,8 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		$this->link_table = $link_table;
 
 		$this->content_relations = $content_relations;
+
+		$this->nonce_factory = $nonce_factory;
 
 		if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
 			$this->post_request_data = $_POST;
@@ -76,15 +86,12 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 	 */
 	public function get_remote_post( WP_Post $source_post, $blog_id ) {
 
-		$post = null;
-
-		$linked = Mlp_Helpers::load_linked_elements( $source_post->ID, '', get_current_blog_id() );
-		if ( ! empty( $linked[ $blog_id ] ) && blog_exists( $blog_id ) ) {
+		$linked = \Inpsyde\MultilingualPress\get_translation_ids( $source_post->ID );
+		if ( ! empty( $linked[ $blog_id ] ) && \Inpsyde\MultilingualPress\site_exists( $blog_id ) ) {
 			$post = get_blog_post( $blog_id, $linked[ $blog_id ] );
-		}
-
-		if ( $post ) {
-			return $post;
+			if ( $post ) {
+				return $post;
+			}
 		}
 
 		return $this->get_dummy_post( $source_post->post_type );
@@ -159,16 +166,13 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 
 		// Create a copy of the item for every related blog
 		foreach ( $to_translate as $blog_id ) {
-			if ( $blog_id == get_current_blog_id() or ! blog_exists( $blog_id ) ) {
+			if ( $blog_id == get_current_blog_id() or ! \Inpsyde\MultilingualPress\site_exists( $blog_id ) ) {
 				continue;
 			}
 
-			$nonce_validator = Mlp_Nonce_Validator_Factory::create(
+			$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $this->nonce_factory->create( [
 				"save_translation_of_post_{$post_id}_for_site_{$blog_id}",
-				$this->source_site_id
-			);
-
-			$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $nonce_validator );
+			] ) );
 			if ( ! $request_validator->is_valid( $post ) ) {
 				continue;
 			}
@@ -243,7 +247,7 @@ class Mlp_Translatable_Post_Data implements Mlp_Translatable_Post_Data_Interface
 		}
 
 		if ( 0 < $post_parent ) {
-			$this->parent_elements = mlp_get_linked_elements( $post_parent );
+			$this->parent_elements = \Inpsyde\MultilingualPress\get_translation_ids( $post_parent );
 		}
 	}
 

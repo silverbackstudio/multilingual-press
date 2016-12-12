@@ -1,10 +1,10 @@
-import globalStub from "../../stubs/global";
-import test from "tape";
-import sinon from "sinon";
-import * as _ from "lodash";
-import * as F from "../../functions";
-import jQueryObject from "../../stubs/jQueryObject";
-import RelationshipControl from "../../../../../resources/js/admin/post-translation/RelationshipControl";
+import globalStub from '../../stubs/global';
+import test from 'tape';
+import sinon from 'sinon';
+import * as _ from 'lodash';
+import * as F from '../../functions';
+import JqueryObject from '../../stubs/JqueryObject';
+import RelationshipControl from '../../../../../resources/js/admin/post-translation/RelationshipControl';
 
 const { $, Backbone, window } = global;
 
@@ -67,7 +67,7 @@ test( 'initializeEventHandlers ...', ( assert ) => {
 test( 'updateUnsavedRelationships (changed input, meta box already stored) ...', ( assert ) => {
 	const testee = createTestee();
 
-	const $metaBox = new jQueryObject();
+	const $metaBox = new JqueryObject();
 
 	const unsavedRelationships = [ $metaBox ];
 
@@ -78,7 +78,7 @@ test( 'updateUnsavedRelationships (changed input, meta box already stored) ...',
 		target: F.getRandomString()
 	};
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.closest.returns( $metaBox );
 
 	$.withArgs( event.target ).returns( $input );
@@ -98,7 +98,7 @@ test( 'updateUnsavedRelationships (changed input, meta box already stored) ...',
 test( 'updateUnsavedRelationships (unchanged input, meta box not stored) ...', ( assert ) => {
 	const testee = createTestee();
 
-	const unsavedRelationships = [ new jQueryObject() ];
+	const unsavedRelationships = [ new JqueryObject() ];
 
 	// Rewire internal data.
 	RelationshipControl.__Rewire__( '_this', { unsavedRelationships } );
@@ -107,10 +107,10 @@ test( 'updateUnsavedRelationships (unchanged input, meta box not stored) ...', (
 		target: F.getRandomString()
 	};
 
-	const $metaBox = new jQueryObject();
-	$metaBox.find.returns( new jQueryObject() );
+	const $metaBox = new JqueryObject();
+	$metaBox.find.returns( new JqueryObject() );
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.closest.returns( $metaBox );
 	$input.val.returns( 'stay' );
 
@@ -131,7 +131,7 @@ test( 'updateUnsavedRelationships (unchanged input, meta box not stored) ...', (
 test( 'updateUnsavedRelationships (unchanged input, meta box stored) ...', ( assert ) => {
 	const testee = createTestee();
 
-	const $metaBox = new jQueryObject();
+	const $metaBox = new JqueryObject();
 
 	const unsavedRelationships = [ $metaBox ];
 
@@ -142,9 +142,9 @@ test( 'updateUnsavedRelationships (unchanged input, meta box stored) ...', ( ass
 		target: F.getRandomString()
 	};
 
-	$metaBox.find.returns( new jQueryObject() );
+	$metaBox.find.returns( new JqueryObject() );
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.closest.returns( $metaBox );
 	$input.val.returns( 'stay' );
 
@@ -169,10 +169,10 @@ test( 'updateUnsavedRelationships (changed input, meta box not stored) ...', ( a
 		target: F.getRandomString()
 	};
 
-	const $metaBox = new jQueryObject();
-	$metaBox.find.returns( new jQueryObject() );
+	const $metaBox = new JqueryObject();
+	$metaBox.find.returns( new JqueryObject() );
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.closest.returns( $metaBox );
 
 	$.withArgs( event.target ).returns( $input );
@@ -213,7 +213,7 @@ test( 'confirmUnsavedRelationships (unsaved relationships, user confirmed discar
 	// Rewire internal data.
 	RelationshipControl.__Rewire__( '_this', {
 		settings: {
-			L10n: {
+			l10n: {
 				unsavedRelationships: ''
 			}
 		},
@@ -247,7 +247,7 @@ test( 'confirmUnsavedRelationships (unsaved relationships, user canceled discard
 	// Rewire internal data.
 	RelationshipControl.__Rewire__( '_this', {
 		settings: {
-			L10n: {
+			l10n: {
 				unsavedRelationships: ''
 			}
 		},
@@ -293,17 +293,18 @@ test( 'saveRelationship (nothing changed) ...', ( assert ) => {
 
 	const action = 'stay';
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.val.returns( action );
 
-	$.returns( $input );
+	$.returns( $input )
+		.withArgs( event.target ).returns( { closest: sinon.stub().returns( new JqueryObject() ) } );
 
 	testee.saveRelationship( event );
 
 	assert.equal(
-		testee.getEventName.calledWith( action ),
-		true,
-		'... SHOULD fetch the event name for the expected action.'
+		testee.getEventName.callCount,
+		0,
+		'... SHOULD NOT fetch the event name for the default action.'
 	);
 
 	assert.equal(
@@ -338,11 +339,14 @@ test( 'saveRelationship (data changed) ...', ( assert ) => {
 
 	const action = F.getRandomString();
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.val.returns( action );
 
-	const $button = new jQueryObject();
-	$button.data.returnsArg( 0 );
+	const $container = new JqueryObject();
+	$container.data.returnsArg( 0 );
+
+	const $button = new JqueryObject();
+	$button.closest.withArgs( '.mlp-relationship-control' ).returns( $container );
 
 	$.returns( $input )
 		.withArgs( event.target ).returns( $button );
@@ -362,7 +366,7 @@ test( 'saveRelationship (data changed) ...', ( assert ) => {
 	);
 
 	const eventData = {
-		action: 'mlp_rc_' + action,
+		action,
 		remote_post_id: 'remote-post-id',
 		remote_site_id: 'remote-site-id',
 		source_post_id: 'source-post-id',
@@ -370,7 +374,7 @@ test( 'saveRelationship (data changed) ...', ( assert ) => {
 	};
 
 	assert.equal(
-		options.EventManager.trigger.calledWith( 'RelationshipControl:' + eventName, eventData, eventName ),
+		options.EventManager.trigger.calledWith( `RelationshipControl:${eventName}`, eventData, eventName ),
 		true,
 		'... SHOULD trigger the expected event.'
 	);
@@ -381,11 +385,17 @@ test( 'saveRelationship (data changed) ...', ( assert ) => {
 	assert.end();
 } );
 
-test( 'getEventName (search) ...', ( assert ) => {
-	const testee = createTestee();
+test( 'getEventName (connect existing post) ...', ( assert ) => {
+	const actionConnectExisting = F.getRandomString();
+
+	const testee = createTestee( {
+		settings: {
+			actionConnectExisting
+		}
+	} );
 
 	assert.equal(
-		testee.getEventName( 'search' ),
+		testee.getEventName( actionConnectExisting ),
 		'connectExistingPost',
 		'... SHOULD return the expected result.'
 	);
@@ -393,11 +403,17 @@ test( 'getEventName (search) ...', ( assert ) => {
 	assert.end();
 } );
 
-test( 'getEventName (new) ...', ( assert ) => {
-	const testee = createTestee();
+test( 'getEventName (connect new post) ...', ( assert ) => {
+	const actionConnectNew = F.getRandomString();
+
+	const testee = createTestee( {
+		settings: {
+			actionConnectNew
+		}
+	} );
 
 	assert.equal(
-		testee.getEventName( 'new' ),
+		testee.getEventName( actionConnectNew ),
 		'connectNewPost',
 		'... SHOULD return the expected result.'
 	);
@@ -405,11 +421,17 @@ test( 'getEventName (new) ...', ( assert ) => {
 	assert.end();
 } );
 
-test( 'getEventName (disconnect) ...', ( assert ) => {
-	const testee = createTestee();
+test( 'getEventName (disconnect post) ...', ( assert ) => {
+	const actionDisconnect = F.getRandomString();
+
+	const testee = createTestee( {
+		settings: {
+			actionDisconnect
+		}
+	} );
 
 	assert.equal(
-		testee.getEventName( 'disconnect' ),
+		testee.getEventName( actionDisconnect ),
 		'disconnectPost',
 		'... SHOULD return the expected result.'
 	);
@@ -421,7 +443,7 @@ test( 'getEventName (unknown action) ...', ( assert ) => {
 	const testee = createTestee();
 
 	assert.equal(
-		testee.getEventName(),
+		testee.getEventName( '' ),
 		'',
 		'... SHOULD return an empty string.'
 	);
@@ -437,7 +459,7 @@ test( 'connectNewPost ...', ( assert ) => {
 
 	const postTitle = F.getRandomString();
 
-	const $postTitle = new jQueryObject();
+	const $postTitle = new JqueryObject();
 	$postTitle.val.returns( postTitle );
 
 	$.withArgs( 'input[name="post_title"]' ).returns( $postTitle );
@@ -493,7 +515,7 @@ test( 'connectExistingPost (input checked) ...', ( assert ) => {
 	const data = F.getRandomObject();
 	data.remote_site_id = F.getRandomInteger();
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.val.returns( postID );
 
 	$.returns( $input );
@@ -527,7 +549,7 @@ test( 'connectExistingPost (input checked) ...', ( assert ) => {
 
 test( 'connectExistingPost (no input checked) ...', ( assert ) => {
 	const settings = {
-		L10n: {
+		l10n: {
 			noPostSelected: ''
 		}
 	};
@@ -539,7 +561,7 @@ test( 'connectExistingPost (no input checked) ...', ( assert ) => {
 	// Turn method in to spy.
 	testee.sendRequest = sinon.spy();
 
-	const $input = new jQueryObject();
+	const $input = new JqueryObject();
 	$input.val.returns( '' );
 
 	$.returns( $input );

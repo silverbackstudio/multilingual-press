@@ -7,7 +7,6 @@
  * Author URI:  http://inpsyde.com
  * Version:     3.0.0-dev
  * Text Domain: multilingual-press
- * Domain Path: languages
  * License:     MIT
  * Network:     true
  */
@@ -58,8 +57,11 @@ function bootstrap() {
 		->register_service_provider( new FactoryProvider() )
 		->register_service_provider( new InstallationServiceProvider() )
 		->register_service_provider( new Module\AlternativeLanguageTitleInAdminBar\ServiceProvider() )
+		->register_service_provider( new Module\CustomPostTypeSupport\ServiceProvider() )
 		->register_service_provider( new Module\Trasher\ServiceProvider() )
-		->register_service_provider( new SiteDuplicationServiceProvider() );
+		->register_service_provider( new Module\UserAdminLanguage\ServiceProvider() )
+		->register_service_provider( new SiteDuplicationServiceProvider() )
+		->register_service_provider( new Widget\WidgetServiceProvider() );
 
 	/**
 	 * MultilingualPress functions.

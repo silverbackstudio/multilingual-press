@@ -1,5 +1,6 @@
 <?php
 
+use Inpsyde\MultilingualPress\API\Languages;
 use Inpsyde\MultilingualPress\API\SiteRelations;
 
 /**
@@ -14,40 +15,35 @@ use Inpsyde\MultilingualPress\API\SiteRelations;
 class Mlp_Network_New_Site_Controller {
 
 	/**
-	 * Language API
-	 *
-	 * @var Mlp_Language_Api_Interface
+	 * @var Languages
 	 */
-	private $language_api;
+	private $languages;
 
 	/**
-	 * Language API
-	 *
 	 * @var SiteRelations
 	 */
 	private $site_relation;
 
 	/**
 	 * Constructor
-	 * @wp-hook plugins_loaded
-	 * @param Mlp_Language_Api_Interface   $language_api
-	 * @param SiteRelations $site_relation
+	 *
+	 * @param SiteRelations $site_relation Site relations API object.
+	 * @param Languages     $languages     Languages API object.
 	 */
-	public function __construct(
-		Mlp_Language_Api_Interface   $language_api,
-		SiteRelations $site_relation
-	) {
+	public function __construct( SiteRelations $site_relation, Languages $languages ) {
 
-		if ( ! is_network_admin() )
+		if ( ! is_network_admin() ) {
 			return;
+		}
 
-		$this->language_api  = $language_api;
 		$this->site_relation = $site_relation;
+
+		$this->languages = $languages;
 
 		add_action( 'wpmu_new_blog', [ $this, 'update' ] );
 
 		// TODO: Simplify, by deleting the template stuff, with the release of WordPress 4.5.0 + 2.
-		$view = new Mlp_New_Site_View( $this->language_api );
+		$view = new Mlp_New_Site_View( $languages );
 		// Get the unaltered WordPress version.
 		require ABSPATH . WPINC . '/version.php';
 		/** @var string $wp_version */
@@ -121,22 +117,19 @@ class Mlp_Network_New_Site_Controller {
 	private function update_wplang( $blog_id ) {
 
 		$posted = $this->get_posted_language();
-
-		if ( ! $posted )
+		if ( ! $posted ) {
 			return;
+		}
 
-		// search for wp_locale where search = $http_name
-		$search = [
-			'fields' => [ 'wp_locale' ],
-			'where'  => [
+		$available_language = $this->languages->get_languages( [
+			'fields'     => 'wp_locale',
+			'conditions' => [
 				[
-					'field'  => 'http_name',
-					'search' => $posted,
+					'field' => 'http_name',
+					'value' => $posted,
 				],
 			],
-		];
-
-		$available_language = $this->language_api->get_db()->get_items( $search, OBJECT );
+		] );
 
 		// no results found? -> return
 		if ( empty( $available_language ) )
