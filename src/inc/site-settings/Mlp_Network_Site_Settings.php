@@ -10,7 +10,7 @@ class Mlp_Network_Site_Settings {
 	/**
 	 * Tab configuration.
 	 *
-	 * @var Inpsyde_Property_List_Interface
+	 * @var Mlp_Network_Site_Settings_Properties
 	 */
 	private $config;
 
@@ -103,7 +103,7 @@ class Mlp_Network_Site_Settings {
 
 			$page = $marked[1];
 
-			$content = $marked[0] . $marked[2];
+			$content = str_replace( 'nav-tab-active', '', $marked[0] . $marked[2] );
 		}
 
 		$closing_tag = '</' . $this->get_heading_level() . '>';

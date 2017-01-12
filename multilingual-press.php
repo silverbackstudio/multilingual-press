@@ -4,7 +4,7 @@
  * Plugin URI:  https://wordpress.org/plugins/multilingual-press/
  * Description: Simply <strong>the</strong> multisite-based free open source plugin for your multilingual websites.
  * Author:      Inpsyde GmbH
- * Author URI:  http://inpsyde.com
+ * Author URI:  https://inpsyde.com
  * Version:     3.0.0-dev
  * Text Domain: multilingual-press
  * License:     MIT
@@ -21,8 +21,11 @@ use Inpsyde\MultilingualPress\Database\DatabaseServiceProvider;
 use Inpsyde\MultilingualPress\Factory\FactoryProvider;
 use Inpsyde\MultilingualPress\Installation\InstallationServiceProvider;
 use Inpsyde\MultilingualPress\Module;
+use Inpsyde\MultilingualPress\NavMenu\NavMenuServiceProvider;
+use Inpsyde\MultilingualPress\Relations\RelationsServiceProvider;
 use Inpsyde\MultilingualPress\Service\AddOnlyContainer;
 use Inpsyde\MultilingualPress\SiteDuplication\SiteDuplicationServiceProvider;
+use Inpsyde\MultilingualPress\Translation\TranslationServiceProvider;
 
 defined( 'ABSPATH' ) or die();
 
@@ -58,9 +61,14 @@ function bootstrap() {
 		->register_service_provider( new InstallationServiceProvider() )
 		->register_service_provider( new Module\AlternativeLanguageTitleInAdminBar\ServiceProvider() )
 		->register_service_provider( new Module\CustomPostTypeSupport\ServiceProvider() )
+		->register_service_provider( new Module\Quicklinks\ServiceProvider() )
+		->register_service_provider( new Module\Redirect\ServiceProvider() )
 		->register_service_provider( new Module\Trasher\ServiceProvider() )
 		->register_service_provider( new Module\UserAdminLanguage\ServiceProvider() )
+		->register_service_provider( new NavMenuServiceProvider() )
+		->register_service_provider( new RelationsServiceProvider() )
 		->register_service_provider( new SiteDuplicationServiceProvider() )
+		->register_service_provider( new TranslationServiceProvider() )
 		->register_service_provider( new Widget\WidgetServiceProvider() );
 
 	/**

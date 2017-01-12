@@ -155,6 +155,8 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 		 */
 		do_action( 'mlp_before_post_synchronization', $this->save_context );
 
+		// TODO: Fire also a typeless action that has the type (i.e., post) as second argument.
+
 		foreach ( $this->post_request_data[ $this->name_base ] as $remote_blog_id => $post_data ) {
 			if (
 				! in_array( $remote_blog_id, $related_blogs )
@@ -167,7 +169,7 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 				"save_translation_of_post_{$post_id}_for_site_$remote_blog_id",
 			] );
 
-			$request_validator = Mlp_Save_Post_Request_Validator_Factory::create( $nonce );
+			$request_validator = new Mlp_Save_Post_Request_Validator( $nonce );
 			if ( ! $request_validator->is_valid( $post ) ) {
 				continue;
 			}
@@ -606,15 +608,10 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return false;
 		}
 
-		if ( empty( $this->post_request_data ) ) {
-			return false;
-		}
+		// For auto-drafts, 'save_post' is called twice, resulting in doubled drafts for translations.
+		$called++;
 
-		if (
-			! empty( $this->post_request_data['original_post_status'] )
-			&& 'auto-draft' === $this->post_request_data['original_post_status']
-			&& 1 < $called
-		) {
+		if ( empty( $this->post_request_data ) ) {
 			return false;
 		}
 
@@ -626,13 +623,18 @@ class Mlp_Advanced_Translator_Data implements Mlp_Advanced_Translator_Data_Inter
 			return false;
 		}
 
+		if (
+			! empty( $this->post_request_data['original_post_status'] )
+			&& 'auto-draft' === $this->post_request_data['original_post_status']
+			&& 1 < $called
+		) {
+			return false;
+		}
+
 		// We only need this when the post is published or drafted.
 		if ( ! $this->is_connectable_status( $post ) ) {
 			return false;
 		}
-
-		// For auto-drafts, 'save_post' is called twice, resulting in doubled drafts for translations.
-		$called++;
 
 		return true;
 	}

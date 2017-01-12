@@ -23,17 +23,22 @@ final class CustomPostTypeSupportSettingsBox implements SettingsBoxViewModel {
 	 */
 	private $post_types;
 
+	/**
+	 * @var PostTypeRepository
+	 */
+	private $repository;
+
 	/**@todo With WordPress 4.6 + 2, use WP_Post_Type[] as return type hint.
 	 * Constructor. Sets up the properties.
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param object[] $post_types Post types.
-	 * @param Nonce    $nonce      Nonce object.
+	 * @param PostTypeRepository $repository Post type repository object.
+	 * @param Nonce              $nonce      Nonce object.
 	 */
-	public function __construct( array $post_types, Nonce $nonce ) {
+	public function __construct( PostTypeRepository $repository, Nonce $nonce ) {
 
-		$this->post_types = $post_types;
+		$this->repository = $repository;
 
 		$this->nonce = $nonce;
 	}
@@ -86,6 +91,10 @@ final class CustomPostTypeSupportSettingsBox implements SettingsBoxViewModel {
 	 */
 	public function markup() {
 
+		if ( ! isset( $this->post_types ) ) {
+			$this->post_types = $this->repository->get_custom_post_types();
+		}
+
 		if ( ! $this->post_types ) {
 			return '';
 		}
@@ -113,7 +122,7 @@ final class CustomPostTypeSupportSettingsBox implements SettingsBoxViewModel {
 	 */
 	public function title() {
 
-		return __( 'Custom Post Type Support Settings', 'multilingual-press' );
+		return __( 'Custom Post Type Support', 'multilingual-press' );
 	}
 
 	/**@todo With WordPress 4.6 + 2, use WP_Post_Type as type hint.

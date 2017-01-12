@@ -17,15 +17,15 @@ final class WidgetView implements View {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param array $args     Widget arguments.
-	 * @param array $instance Widget settings.
+	 * @param array  $args     Widget arguments.
+	 * @param array  $instance Widget settings.
+	 * @param string $id_base  Widget ID base.
 	 *
 	 * @return void
 	 */
-	public function render( array $args, array $instance ) {
+	public function render( array $args, array $instance, $id_base ) {
 
-		// TODO: Adapt function name(space) as soon as moved.
-		$output = mlp_show_linked_elements( [
+		$output = \Inpsyde\MultilingualPress\get_linked_elements( [
 			'link_text'         => empty( $instance['widget_link_type'] ) ? 'text' : $instance['widget_link_type'],
 			'show_current_blog' => ! empty( $instance['widget_show_current_blog'] ),
 			'display_flag'      => ! empty( $instance['widget_display_flag'] ),
@@ -39,7 +39,7 @@ final class WidgetView implements View {
 
 		if ( ! empty( $instance['widget_title'] ) ) {
 			/** This filter is documented in wp-includes/default-widgets.php */
-			$title = (string) apply_filters( 'widget_title', (string) $instance['widget_title'] );
+			$title = (string) apply_filters( 'widget_title', (string) $instance['widget_title'], $instance, $id_base );
 
 			echo $args['before_title'] . esc_html( $title ) . $args['after_title'];
 		}
